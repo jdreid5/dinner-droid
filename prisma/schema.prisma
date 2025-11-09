@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---- Users (optional) ----
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recipes Recipe[]
+  plans   Plan[]
+}
+
+// ---- Core recipe domain ----
+model Recipe {
+  id      Int   @id @default(autoincrement())
+  ownerId Int?
+  owner   User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  title       String
+  sourceUrl   String? // (SQLite: drop @db.VarChar)
+  goustoId    String? @unique
+  servings    Int?
+  cookMinutes Int?
+  difficulty  String?
+  calories    Int?
+  notes       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  steps     Step[]             @relation("RecipeSteps")
+  items     RecipeIngredient[] @relation("RecipeItems")
+  orders    OrderHistory[]
+  planItems PlanItem[]
+  tags      RecipeTag[]
+
+  @@index([title])
+  @@index([cookMinutes])
+}
+
+model Step {
+  id       Int     @id @default(autoincrement())
+  recipeId Int
+  recipe   Recipe  @relation("RecipeSteps", fields: [recipeId], references: [id], onDelete: Cascade)
+  n        Int
+  body     String
+  imageUrl String? // (SQLite: drop @db.VarChar)
+
+  @@unique([recipeId, n])
+  @@index([recipeId, n])
+}
+
+model Ingredient {
+  id            Int     @id @default(autoincrement())
+  name          String  @unique
+  isPantry      Boolean @default(false)
+  densityGPerMl Float?
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usedIn RecipeIngredient[] @relation("IngredientUses") // <-- name matches below
+
+  @@index([name])
+}
+
+model RecipeIngredient {
+  // Join table with payload (qty/unit/altText)
+  recipeId     Int
+  ingredientId Int
+
+  recipe     Recipe     @relation("RecipeItems", fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation("IngredientUses", fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  qty     Float?
+  unit    String? // g, kg, ml, l, tbsp, tsp, clove, pack, tin, pc, etc.
+  altText String? // e.g., "1 small onion"
+
+  @@id([recipeId, ingredientId])
+  @@index([ingredientId])
+}
+
+model OrderHistory {
+  id        Int      @id @default(autoincrement())
+  recipeId  Int
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  orderedOn DateTime
+
+  @@index([orderedOn])
+  @@index([recipeId, orderedOn])
+}
+
+model Plan {
+  id      Int   @id @default(autoincrement())
+  ownerId Int?
+  owner   User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  startsOn  DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items PlanItem[]
+
+  @@index([startsOn])
+}
+
+model PlanItem {
+  planId   Int
+  plan     Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  recipeId Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  dayIndex Int?
+
+  @@id([planId, recipeId])
+  @@index([recipeId])
+}
+
+// ---- Tagging ----
+model Tag {
+  id    Int     @id @default(autoincrement())
+  slug  String  @unique // e.g., "veg", "quick"
+  label String?
+
+  recipes RecipeTag[]
+
+  @@index([slug])
+}
+
+model RecipeTag {
+  recipeId Int
+  tagId    Int
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([recipeId, tagId])
+  @@index([tagId])
+}
