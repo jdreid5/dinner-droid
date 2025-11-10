@@ -56,14 +56,14 @@ async function main() {
 		const recipe = await prisma.recipe.create({
 			data: {
 				title: r.title,
-				sourceUrl: r.sourceUrl,
-				goustoId: r.goustoId,
-				servings: r.servings,
-				cookMinutes: r.cookMinutes,
-				difficulty: r.difficulty,
-				calories: r.calories,
-				notes: r.notes,
-				steps: { create: r.steps.map(s => ({ n: s.n, body: s.body, imageUrl: s.imageUrl })) }
+				sourceUrl: r.sourceUrl ?? null,
+				goustoId: r.goustoId ?? null,
+				servings: r.servings ?? null,
+				cookMinutes: r.cookMinutes ?? null,
+				difficulty: r.difficulty ?? null,
+				calories: r.calories ?? null,
+				notes: r.notes ?? null,
+				steps: { create: r.steps.map(s => ({ n: s.n, body: s.body, imageUrl: s.imageUrl ?? null})) }
 			},
 			select: { id: true }
 		});
@@ -77,12 +77,16 @@ async function main() {
 		// link ingredients with quantities
 		for (const it of r.ingredients) {
 			const key = it.name.trim().toLowerCase();
+			const ingredientId = ingIds[key];
+			if (!ingredientId) {
+				throw new Error(`No ingredientId found for "${key}"`);
+			}
 			await prisma.recipeIngredient.create({
 				data: {
 					recipeId: recipe.id,
-					ingredientId: ingIds[key],
+					ingredientId,
 					qty: it.qty ?? null,
-					unit: (it.unit ?? null)?.toLowerCase(),
+					unit: (it.unit ? it.unit.toLowerCase() : null),
 					altText: it.altText ?? null
 				}
 			});
@@ -92,5 +96,4 @@ async function main() {
 	console.log("Seed complete");
 }
 
-main()
-	.finally(async () => prisma.$disconnect());
+main().finally(async () => prisma.$disconnect());
