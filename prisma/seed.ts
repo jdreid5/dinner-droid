@@ -10,8 +10,12 @@ type InputRecipe = {
 	tags?: string[];
 	servings?: number;
 	cookMinutes?: number;
-	difficulty?: string;
 	calories?: number;
+	protein?: number;
+	carbohydrate?: number;
+	fat?: number;
+	fibre?: number;
+	salt?: number;
 	notes?: string;
 	steps: { n: number; body: string; imageUrl?: string }[];
 	ingredients: { name: string; qty?: number; unit?: string; altText?: string; isPantry?: boolean }[];
@@ -60,8 +64,12 @@ async function main() {
 				goustoId: r.goustoId ?? null,
 				servings: r.servings ?? null,
 				cookMinutes: r.cookMinutes ?? null,
-				difficulty: r.difficulty ?? null,
 				calories: r.calories ?? null,
+				protein: r.protein ?? null,
+				carbohydrate: r.carbohydrate ?? null,
+				fat: r.fat ?? null,
+				fibre: r.fibre ?? null,
+				salt: r.salt ?? null,
 				notes: r.notes ?? null,
 				steps: { create: r.steps.map(s => ({ n: s.n, body: s.body, imageUrl: s.imageUrl ?? null})) }
 			},

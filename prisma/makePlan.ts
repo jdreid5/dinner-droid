@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const RECIPES_PER_WEEK = 5;
+const RECIPES_PER_WEEK = 2;
 const NO_REPEAT_WEEKS = 6;
 
 function weeksAgoDate(n: number) {
