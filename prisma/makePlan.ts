@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-const RECIPES_PER_WEEK = 2;
-const NO_REPEAT_WEEKS = 6;
+const RECIPES_PER_WEEK = 4;
+const NO_REPEAT_WEEKS = 0;
 
 function weeksAgoDate(n: number) {
 	const d = new Date();
@@ -71,8 +71,8 @@ async function main() {
 	for (const it of planWithItems!.items) {
 		for (const ri of it.recipe.items) {
 			const key = ri.ingredient.name + "|" + (ri.unit ?? "");
-			const cur = totals.get(key) ??  { qty: 0, unit: ri.unit ?? null, pantry: ri.ingredient.isPantry };
-			totals.set(key, { qty: cur.qty + (ri.qty ?? 0), unit: cur.unit, pantry: cur.pantry});
+			const cur = totals.get(key) ?? { qty: 0, unit: ri.unit ?? null, pantry: ri.ingredient.isPantry };
+			totals.set(key, { qty: ((cur.qty + (ri.qty ?? 0)))*1.5, unit: cur.unit, pantry: cur.pantry}); // * 1.5 for three people - portions are in db for two people
 		}
 	}
 
