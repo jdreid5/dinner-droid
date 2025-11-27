@@ -483,6 +483,43 @@ javascript: (async () => {
 		});
 	}
 
+	// Click "Load more" until all recipes are loaded
+	async function loadAllRecipes() {
+		let clickCount = 0;
+		const maxClicks = 100; // Safety limit
+
+		while (true) {
+			const loadMoreBtn = document.querySelector('[data-test="load-more-section"] a[href]');
+			if (!loadMoreBtn) {
+				console.log(`No more "Load more" button found after ${clickCount} clicks`);
+				break;
+			}
+
+			const beforeCount = document.querySelectorAll('.RecipeList_recipes__hGtfW a[href^="/cookbook/"]').length;
+			console.log(`Clicking "Load more" (${clickCount + 1})... Currently ${beforeCount} recipes`);
+
+			loadMoreBtn.click();
+			clickCount++;
+
+			// Wait for new recipes to load
+			await new Promise(resolve => setTimeout(resolve, 1500));
+
+			// Check if new recipes appeared
+			const afterCount = document.querySelectorAll('.RecipeList_recipes__hGtfW a[href^="/cookbook/"]').length;
+			if (afterCount === beforeCount) {
+				// No new recipes loaded, try waiting a bit more
+				await new Promise(resolve => setTimeout(resolve, 1500));
+				const finalCount = document.querySelectorAll('.RecipeList_recipes__hGtfW a[href^="/cookbook/"]').length;
+				if (finalCount === beforeCount) {
+					console.log("No new recipes loaded, stopping");
+					break;
+				}
+			}
+		}
+
+		return extractRecipeLinksFromCurrentPage();
+	}
+
 	// Wait for popup to finish loading (checks for recipe-hero element)
 	function waitForPopupLoad(popup, timeout = 30000) {
 		return new Promise((resolve, reject) => {
@@ -527,14 +564,29 @@ javascript: (async () => {
 	}
 
 	if (isRecipeList) {
-		const recipeLinks = extractRecipeLinksFromCurrentPage();
+		const initialCount = extractRecipeLinksFromCurrentPage().length;
 
-		if (!recipeLinks.length) {
-			alert("No recipe links found on this page.\n\nNote: Only recipes visible on the current page will be imported. Scroll down to load more recipes first if needed.");
+		if (!initialCount) {
+			alert("No recipe links found on this page.");
 			return;
 		}
 
-		if (!confirm(`Found ${recipeLinks.length} recipes on this page.\n\nThis will open a popup window and import each recipe. Keep this page open!\n\nProceed?`)) {
+		const loadMore = document.querySelector('[data-test="load-more-section"] a[href]');
+		let recipeLinks;
+
+		if (loadMore) {
+			if (!confirm(`Found ${initialCount} recipes initially.\n\nClick OK to load ALL recipes (may take a minute), or Cancel to import only what's currently visible.`)) {
+				recipeLinks = extractRecipeLinksFromCurrentPage();
+			} else {
+				console.log("Loading all recipes...");
+				recipeLinks = await loadAllRecipes();
+				console.log(`Loaded ${recipeLinks.length} total recipes`);
+			}
+		} else {
+			recipeLinks = extractRecipeLinksFromCurrentPage();
+		}
+
+		if (!confirm(`Ready to import ${recipeLinks.length} recipes.\n\nThis will open a popup window and import each recipe. Keep this page open!\n\nProceed?`)) {
 			return;
 		}
 
