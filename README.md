@@ -1,4 +1,4 @@
-# Gousto Clone PWA
+# Dinner Droid
 
 A personal recipe-management app inspired by Gousto.  
 This project includes:
