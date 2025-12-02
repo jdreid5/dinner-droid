@@ -14,7 +14,7 @@ The bookmarklet parses structured content from Gousto recipe pages — including
 
 ### API and Database
 Powered by:
-- Node.js / Express (`server.ts`)
+- Node.js / Express (`backend/server.ts`)
 - Prisma ORM
 - SQLite for local development
 
@@ -32,8 +32,9 @@ POST http://localhost:3001/api/import
 
 ## Getting Started
 
-### 1. Install dependencies
+### 1. Install backend dependencies
 ```
+cd backend
 npm install
 ```
 
@@ -44,6 +45,13 @@ npx prisma migrate dev
 
 ### 3. Start the server
 ```
+npx ts-node server.ts
+```
+
+### 4. Install frontend dependencies (separate terminal)
+```
+cd frontend
+npm install
 npm run dev
 ```
 
@@ -59,11 +67,21 @@ This project is for **personal use**. Do not redistribute scraped Gousto content
 ## Folder Structure
 ```
 root/
-│ server.ts
-│ schema.prisma
-│ bookmarklet-scraper.js
-│ sample-recipe-html.html
-│ recipes-list.html
-└ prisma/
-   └ migrations/
+├── backend/
+│   ├── server.ts
+│   ├── package.json
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── migrations/
+│   │   ├── seed.ts
+│   │   └── makePlan.ts
+│   └── generated/
+├── frontend/
+│   ├── package.json
+│   ├── src/
+│   │   └── app/
+│   └── public/
+├── bookmarklet-scraper.js
+├── sample-recipe-html.html
+└── recipes-list.html
 ```
