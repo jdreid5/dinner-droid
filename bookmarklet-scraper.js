@@ -55,9 +55,10 @@ javascript: (async () => {
 				"cup",
 			];
 			const unitsPattern = units.join("|");
-			const qtyPattern = String.raw`(\d+(?:[.,]\d+)?|\d+\/\d+|[¼½¾])`;
+		const qtyPattern = String.raw`(\d+(?:[.,]\d+)?|\d+\/\d+|[¼½¾])`;
 
-			const trimmed = line.trim();
+		// Strip trailing allergen markers/symbols before parsing
+		const trimmed = line.trim().replace(/[†*‡§]+$/, '').trim();
 
 			// Pattern 1: Qty-first (e.g., "200g beef mince", "2 clove garlic")
 			const qtyFirstRe = new RegExp(
