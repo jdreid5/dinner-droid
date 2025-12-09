@@ -1,49 +1,92 @@
 import { PrismaClient } from "@prisma/client";
+import prompts from "prompts";
+
 const prisma = new PrismaClient();
 
-const RECIPES_PER_WEEK = 4;
-const NO_REPEAT_WEEKS = 0;
-
-function weeksAgoDate(n: number) {
-	const d = new Date();
-	d.setDate(d.getDate() - n * 7);
-	return d;
-}
+const PORTIONS = 3;
 
 async function main() {
-	// 1) Get candidate recipes (exclude recent)
-	const cutoff = weeksAgoDate(NO_REPEAT_WEEKS);
-	const recent = await prisma.orderHistory.findMany({
-		where: { orderedOn: { gte: cutoff } },
-		select: { recipeId: true }
+	// 1) Fetch all recipes with metadata for display
+	const recipes = await prisma.recipe.findMany({
+		select: {
+			id: true,
+			title: true,
+			cookMinutes: true,
+			calories: true
+		},
+		orderBy: { title: "asc" }
 	});
-	const excludeIds = new Set(recent.map(r => r.recipeId));
 
-	const candidates = await prisma.recipe.findMany({
-		select: { id: true },
-		orderBy: { createdAt: "desc" }
-	});
-	const pool = candidates.map(c => c.id).filter(id => !excludeIds.has(id));
-	if (pool.length < RECIPES_PER_WEEK) throw new Error("Not enough recipes to choose from");
-
-	// 2) Random sample
-	const pick: number[] = [];
-	while (pick.length < RECIPES_PER_WEEK) {
-		const id: number = pool[Math.floor(Math.random() * pool.length)]!;
-		if (!pick.includes(id)) pick.push(id);
+	if (recipes.length === 0) {
+		console.log("No recipes in database.");
+		return;
 	}
 
-	// 3) Create plan + items + write order history
+	// 2) Interactive selection loop (type to search, Enter to select, repeat)
+	const DONE_VALUE = -1;
+	const pick: number[] = [];
+
+	while (true) {
+		const available = recipes.filter(r => !pick.includes(r.id));
+		
+		const choices = [
+			{ title: "✓ Done - generate shopping list", value: DONE_VALUE },
+			...available.map(r => {
+				const time = r.cookMinutes ? `${r.cookMinutes}min` : "?min";
+				const cal = r.calories ? `${r.calories} cal` : "? cal";
+				return {
+					title: `${r.title} (${time}, ${cal})`,
+					value: r.id
+				};
+			})
+		];
+
+		const selected = pick.map(id => recipes.find(r => r.id === id)!.title);
+		const status = pick.length > 0 
+			? `\nSelected (${pick.length}): ${selected.join(", ")}\n` 
+			: "";
+
+		const response = await prompts({
+			type: "autocomplete",
+			name: "recipeId",
+			message: `${status}Add a recipe (type to search, Enter to select):`,
+			choices,
+			suggest: (input, choices) => {
+				const lower = input.toLowerCase();
+				return Promise.resolve(
+					choices.filter(c => c.title.toLowerCase().includes(lower))
+				);
+			}
+		});
+
+		if (response.recipeId === undefined) {
+			// User pressed Ctrl+C
+			if (pick.length === 0) {
+				console.log("No recipes selected. Exiting.");
+				return;
+			}
+			break;
+		}
+
+		if (response.recipeId === DONE_VALUE) {
+			if (pick.length === 0) {
+				console.log("No recipes selected. Exiting.");
+				return;
+			}
+			break;
+		}
+
+		pick.push(response.recipeId);
+		console.log(`Added: ${recipes.find(r => r.id === response.recipeId)!.title}`);
+	}
+
+	// 3) Create plan + items (no order history)
 	const plan = await prisma.plan.create({
 		data: {
 			startsOn: new Date(),
 			items: { create: pick.map((id, i) => ({ recipeId: id, dayIndex: i })) }
 		},
 		select: { id: true }
-	});
-
-	await prisma.orderHistory.createMany({
-		data: pick.map(id => ({ recipeId: id, orderedOn: new Date() }))
 	});
 
 	// 4) Aggregate ingredients = shopping list
@@ -67,12 +110,13 @@ async function main() {
 	});
 
 	const totals = new Map<string, { qty: number; unit: string | null; pantry: boolean }>();
+	const scale = PORTIONS / 2;
 
 	for (const it of planWithItems!.items) {
 		for (const ri of it.recipe.items) {
 			const key = ri.ingredient.name + "|" + (ri.unit ?? "");
 			const cur = totals.get(key) ?? { qty: 0, unit: ri.unit ?? null, pantry: ri.ingredient.isPantry };
-			totals.set(key, { qty: ((cur.qty + (ri.qty ?? 0)))*1.5, unit: cur.unit, pantry: cur.pantry}); // * 1.5 for three people - portions are in db for two people
+			totals.set(key, { qty: cur.qty + (ri.qty ?? 0) * scale, unit: cur.unit, pantry: cur.pantry });
 		}
 	}
 
@@ -83,7 +127,7 @@ async function main() {
 
 	console.log("\n=== Shopping List ===");
 	for (const [key, v] of totals.entries()) {
-		const [name, unit] = key.split("|");
+		const [name] = key.split("|");
 		const u = v.unit || "";
 		console.log(`${name}${v.pantry ? " (pantry)" : ""}: ${v.qty || ""} ${u}`.trim());
 	}

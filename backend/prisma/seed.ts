@@ -61,7 +61,6 @@ async function main() {
 			data: {
 				title: r.title,
 				sourceUrl: r.sourceUrl ?? null,
-				goustoId: r.goustoId ?? null,
 				servings: r.servings ?? null,
 				cookMinutes: r.cookMinutes ?? null,
 				calories: r.calories ?? null,

@@ -190,8 +190,81 @@ app.post("/api/import", async (req: Request<{}, {}, ImportPayload>, res: Respons
 	} catch (err: any) {
 		console.error(err);
 		return res
-		.status(500)
-		.json({ ok: false, error: err?.message ?? "Server error" });
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+// app.get("/api/recipes", async (req: Request, res: Response) => {
+// 	try {
+// 		const recipes = await prisma.recipe.findMany({
+// 			select: {
+// 				id: true,
+
+// 			}
+// 		})
+// 	} catch (err: any) {
+// 		console.error(err);
+// 		return res
+// 			.status(500)
+// 			.json({ ok: false, error: err?.message ?? "Server error" });
+// 	}
+// });
+
+app.get("/api/recipes/:id", async (req: Request, res: Response) => {
+	try {
+		const id = Number(req.params.id);
+		if (isNaN(id)) {
+			return res
+				.status(400)
+				.json({ error: "Invalid recipe ID" });
+		}
+
+		const recipe = await prisma.recipe.findUnique({
+			where: { id: Number(id) },
+			include: {
+				steps: { orderBy: { n: "asc" } },
+				items: { include: { ingredient: true } },
+				tags: { include: { tag: true } }
+			}
+		});
+
+		if (!recipe) {
+			return res.status(404).json({ error: "Recipe not found" });
+		}
+
+		return res.json({
+			id: recipe.id,
+			title: recipe.title,
+			sourceUrl: recipe.sourceUrl,
+			imageUrl: recipe.imageUrl,
+			servings: recipe.servings,
+			cookMinutes: recipe.cookMinutes,
+			calories: recipe.calories,
+			protein: recipe.protein,
+			carbohydrate: recipe.carbohydrate,
+			fat: recipe.fat,
+			fibre: recipe.fibre,
+			salt: recipe.salt,
+			notes: recipe.notes,
+			steps: recipe.steps.map(step => ({
+				n: step.n,
+				body: step.body,
+			})),
+			ingredients: recipe.items.map(item => ({
+				name: item.ingredient.name,
+				qty: item.qty,
+				unit: item.unit,
+				altText: item.altText,
+				isPantry: item.ingredient.isPantry
+			})),
+			tags: recipe.tags.map(tag => tag.tag.slug)
+		})
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
 	}
 });
 
