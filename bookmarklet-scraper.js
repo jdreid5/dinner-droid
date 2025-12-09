@@ -47,18 +47,25 @@ javascript: (async () => {
 				"tbsp",
 				"tsp",
 				"clove",
+				"cloves",
 				"pack",
+				"packs",
 				"tin",
+				"tins",
 				"pc",
+				"pcs",
 				"slice",
+				"slices",
 				"bunch",
+				"bunches",
 				"cup",
+				"cups"
 			];
 			const unitsPattern = units.join("|");
-		const qtyPattern = String.raw`(\d+(?:[.,]\d+)?|\d+\/\d+|[¼½¾])`;
+			const qtyPattern = String.raw`(\d+(?:[.,]\d+)?|\d+\/\d+|[¼½¾])`;
 
-		// Strip trailing allergen markers/symbols before parsing
-		const trimmed = line.trim().replace(/[†*‡§]+$/, '').trim();
+			// Strip trailing allergen markers/symbols before parsing
+			const trimmed = line.trim().replace(/[†*‡§]+$/, '').trim();
 
 			// Pattern 1: Qty-first (e.g., "200g beef mince", "2 clove garlic")
 			const qtyFirstRe = new RegExp(
@@ -114,6 +121,17 @@ javascript: (async () => {
 					qty: parseInt(m[2], 10),
 					unit: null,
 					name: (m[1] || "").trim().toLowerCase(),
+					altText: null
+				};
+			}
+
+			// Fallback: ingredient with no quantity (e.g., "Avocado", "Lime")
+			// Only accept if it looks like a valid ingredient name (not empty, has letters)
+			if (trimmed.length > 0 && /[a-zA-Z]/.test(trimmed)) {
+				return {
+					qty: null,
+					unit: null,
+					name: trimmed.toLowerCase(),
 					altText: null
 				};
 			}
@@ -425,7 +443,7 @@ javascript: (async () => {
 	
 		const payload = {
 			title,
-			sourceUrl: location.href,
+			sourceUrl: sourceUrl || location.href,
 			imageUrl,
 			servings,
 			tags,
