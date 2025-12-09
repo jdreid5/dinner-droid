@@ -26,12 +26,14 @@ async function main() {
 	const DONE_VALUE = -1;
 	const pick: number[] = [];
 
+	type Recipe = typeof recipes[number];
+
 	while (true) {
-		const available = recipes.filter(r => !pick.includes(r.id));
+		const available = recipes.filter((r: Recipe) => !pick.includes(r.id));
 		
 		const choices = [
 			{ title: "✓ Done - generate shopping list", value: DONE_VALUE },
-			...available.map(r => {
+			...available.map((r: Recipe) => {
 				const time = r.cookMinutes ? `${r.cookMinutes}min` : "?min";
 				const cal = r.calories ? `${r.calories} cal` : "? cal";
 				return {
@@ -41,7 +43,7 @@ async function main() {
 			})
 		];
 
-		const selected = pick.map(id => recipes.find(r => r.id === id)!.title);
+		const selected = pick.map(id => recipes.find((r: Recipe) => r.id === id)!.title);
 		const status = pick.length > 0 
 			? `\nSelected (${pick.length}): ${selected.join(", ")}\n` 
 			: "";
@@ -77,7 +79,7 @@ async function main() {
 		}
 
 		pick.push(response.recipeId);
-		console.log(`Added: ${recipes.find(r => r.id === response.recipeId)!.title}`);
+		console.log(`Added: ${recipes.find((r: Recipe) => r.id === response.recipeId)!.title}`);
 	}
 
 	// 3) Create plan + items (no order history)
@@ -121,7 +123,8 @@ async function main() {
 	}
 
 	console.log("\n=== Weekly Plan ===");
-	for (const it of planWithItems!.items.sort((a, b) => (a.dayIndex ?? 0) - (b.dayIndex ?? 0))) {
+	const sortedItems = [...planWithItems!.items].sort((a, b) => (a.dayIndex ?? 0) - (b.dayIndex ?? 0));
+	for (const it of sortedItems) {
 		console.log(`- ${it.recipe.title}`);
 	}
 

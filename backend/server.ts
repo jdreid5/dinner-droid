@@ -35,6 +35,15 @@ type ImportPayload = {
 	ingredients?: IngredientIn[];
 };
 
+type StepOut = { n: number; body: string };
+type RecipeItemRow = {
+	ingredient: { name: string; isPantry: boolean };
+	qty: number | null;
+	unit: string | null;
+	altText: string | null;
+};
+type RecipeTagRow = { tag: { slug: string } };
+
 // ----- Routes -----
 app.post("/api/import", async (req: Request<{}, {}, ImportPayload>, res: Response) => {
 	try {
@@ -247,18 +256,18 @@ app.get("/api/recipes/:id", async (req: Request, res: Response) => {
 			fibre: recipe.fibre,
 			salt: recipe.salt,
 			notes: recipe.notes,
-			steps: recipe.steps.map(step => ({
+			steps: recipe.steps.map((step: StepOut) => ({
 				n: step.n,
 				body: step.body,
 			})),
-			ingredients: recipe.items.map(item => ({
+			ingredients: recipe.items.map((item: RecipeItemRow) => ({
 				name: item.ingredient.name,
 				qty: item.qty,
 				unit: item.unit,
 				altText: item.altText,
 				isPantry: item.ingredient.isPantry
 			})),
-			tags: recipe.tags.map(tag => tag.tag.slug)
+			tags: recipe.tags.map((tag: RecipeTagRow) => tag.tag.slug)
 		})
 	} catch (err: any) {
 		console.error(err);
