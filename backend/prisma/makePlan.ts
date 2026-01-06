@@ -118,7 +118,7 @@ async function main() {
 		for (const ri of it.recipe.items) {
 			const key = ri.ingredient.name + "|" + (ri.unit ?? "");
 			const cur = totals.get(key) ?? { qty: 0, unit: ri.unit ?? null, pantry: ri.ingredient.isPantry };
-			totals.set(key, { qty: cur.qty + (ri.qty ?? 0) * scale, unit: cur.unit, pantry: cur.pantry });
+			totals.set(key, { qty: cur.qty + (ri.qty ?? 1) * scale, unit: cur.unit, pantry: cur.pantry });
 		}
 	}
 
