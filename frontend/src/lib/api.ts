@@ -3,7 +3,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 import type { Recipe } from "@/app/types/recipe";
 
 export async function getRecipes(): Promise<Recipe[]> {
-	const res = await fetch(`${API_BASE}/recipes`, { cache: "no-store" });
+	const res = await fetch(`${API_BASE}/api/recipes`, { cache: "no-store" });
 	if (!res.ok) {
 		throw new Error(`Failed to fetch recipes: ${res.statusText}`);
 	}
@@ -11,7 +11,7 @@ export async function getRecipes(): Promise<Recipe[]> {
 }
 
 export async function getRecipe(id: string | number): Promise<Recipe> {
-	const res = await fetch(`${API_BASE}/recipes/${id}`, { cache: "no-store" });
+	const res = await fetch(`${API_BASE}/api/recipes/${id}`, { cache: "no-store" });
 	if (!res.ok) {
 		throw new Error(`Failed to fetch recipe: ${res.statusText}`);
 	}

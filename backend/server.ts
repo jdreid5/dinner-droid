@@ -204,21 +204,22 @@ app.post("/api/import", async (req: Request<{}, {}, ImportPayload>, res: Respons
 	}
 });
 
-// app.get("/api/recipes", async (req: Request, res: Response) => {
-// 	try {
-// 		const recipes = await prisma.recipe.findMany({
-// 			select: {
-// 				id: true,
+app.get("/api/recipes", async (req: Request, res: Response) => {
+	try {
+		const limit = Number(req.query.limit) || 16;
 
-// 			}
-// 		})
-// 	} catch (err: any) {
-// 		console.error(err);
-// 		return res
-// 			.status(500)
-// 			.json({ ok: false, error: err?.message ?? "Server error" });
-// 	}
-// });
+		const randomRecipes = await prisma.$queryRaw<
+			{ id: number; title: string; imageUrl: string | null, cookMinutes: number | null }[]
+		>`SELECT id, title, imageUrl, cookMinutes FROM Recipe ORDER BY RANDOM() LIMIT ${limit}`;
+
+		return res.json(randomRecipes);
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
 
 app.get("/api/recipes/:id", async (req: Request, res: Response) => {
 	try {
