@@ -54,3 +54,6 @@ coverage/
 
 # System files
 Desktop.ini
+
+# next-agents-md
+.next-docs/
