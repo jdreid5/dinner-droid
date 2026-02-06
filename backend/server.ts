@@ -221,6 +221,30 @@ app.get("/api/recipes", async (req: Request, res: Response) => {
 	}
 });
 
+app.get("/api/searched-recipes", async (req: Request, res: Response) => {
+	try {
+		const searchTerm = String(req.query.searchTerm) || "";
+		const limit = 100;
+
+		const searchedRecipes = await prisma.recipe.findMany({
+			where: {
+				title: {
+					contains: searchTerm
+				}
+			},
+			take: limit,
+			orderBy: { title: "asc" }
+		});
+
+		return res.json(searchedRecipes);
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error"});
+	}
+});
+
 app.get("/api/recipes/:id", async (req: Request, res: Response) => {
 	try {
 		const id = Number(req.params.id);
