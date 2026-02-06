@@ -1,13 +1,18 @@
-import { getRecipes } from "@/lib/api";
+import { getRecipes, getSearchedRecipes } from "@/lib/api";
+import SearchBar from "./SearchBar";
+import { Suspense } from "react";
 
-export default async function RecipesPage() {
-	const recipes = await getRecipes();
+export default async function RecipesPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }>}) {
+	const { q } = await searchParams;
+	const searchTerm = typeof q === "string" ? q : "";
+	const recipes = searchTerm ? await getSearchedRecipes(searchTerm) :await getRecipes();
 	
 	return (
 		<div>
-			<h1>Recipes</h1>
 			<div id="search-bar" className="flex justify-center items-center">
-				<input type="text" placeholder="Search recipes" className="w-full max-w-md p-2 rounded-3xl border border-gray-300" />
+				<Suspense>
+					<SearchBar />
+				</Suspense>
 			</div>
 			<br />
 			<ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

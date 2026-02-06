@@ -17,3 +17,11 @@ export async function getRecipe(id: string | number): Promise<Recipe> {
 	}
 	return res.json();
 }
+
+export async function getSearchedRecipes(query: string): Promise<Recipe[]> {
+	const res = await fetch(`${API_BASE}/api/searched-recipes?searchTerm=${query}`, { cache: "no-store" });
+	if (!res.ok) {
+		throw new Error(`Failed to fetch searched recipes: ${res.statusText}`);
+	}
+	return res.json();
+}
