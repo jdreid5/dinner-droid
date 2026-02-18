@@ -29,3 +29,12 @@ export type Recipe = {
 	steps?: Step[];
 	ingredients?: Ingredient[];
 }
+
+export type Nutrition = {
+	calories?: number | null;
+	protein?: number | null;
+	carbohydrate?: number | null;
+	fat?: number | null;
+	fibre?: number | null;
+	salt?: number | null;
+}

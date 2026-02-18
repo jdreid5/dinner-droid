@@ -1,4 +1,7 @@
 import { getRecipe } from "@/lib/api";
+import { IngredientsTable } from "./IngredientsTable";
+import { NutritionalTable } from "./NutritionalTable";
+import { PortionProvider } from "./PortionContext";
 
 export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
@@ -10,18 +13,9 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 			<p>{recipe.cookMinutes} minutes</p>
 			<img src={recipe.imageUrl || ""} alt={`aerial photo of ${recipe.title}`} />
 			<h2>Ingredients</h2>
-			<table>
-				<tbody>
-					{recipe.ingredients?.map((ingredient) => {
-						return (
-							<tr key={ingredient.name}>
-								<td>{ingredient.name}</td>
-								<td>{ingredient.qty}{ingredient.unit}</td>
-							</tr>
-						)
-					})}
-				</tbody>
-			</table>
+			<PortionProvider>
+				<IngredientsTable ingredients={recipe.ingredients || []} />
+			</PortionProvider>
 			<h2>Steps</h2>
 			<ol>
 				{recipe.steps?.map((step) => {
@@ -31,34 +25,16 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 				})}
 			</ol>
 			<h2>Nutritional Information</h2>
-			<table>
-				<tbody>
-					<tr>
-						<td>Calories</td>
-						<td>{recipe.calories}kcal</td>
-					</tr>
-					<tr>
-						<td>Protein</td>
-						<td>{recipe.protein}g</td>
-					</tr>
-					<tr>
-						<td>Carbohydrate</td>
-						<td>{recipe.carbohydrate}g</td>
-					</tr>
-					<tr>
-						<td>Fat</td>
-						<td>{recipe.fat}g</td>
-					</tr>
-					<tr>
-						<td>Fibre</td>
-						<td>{recipe.fibre}g</td>
-					</tr>
-					<tr>
-					<td>Salt</td>
-						<td>{recipe.salt}g</td>
-					</tr>
-				</tbody>
-			</table>
+			<PortionProvider>
+				<NutritionalTable nutrition={{
+					calories: recipe.calories,
+					protein: recipe.protein,
+					carbohydrate: recipe.carbohydrate,
+					fat: recipe.fat,
+					fibre: recipe.fibre,
+					salt: recipe.salt,
+				}} />
+			</PortionProvider>
 		</div>
 	)
 }
