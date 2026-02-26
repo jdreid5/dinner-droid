@@ -16,7 +16,6 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 			<PortionProvider>
 				<PortionSelector />
 
-				<h2>Ingredients</h2>
 				<IngredientsTable ingredients={recipe.ingredients || []} />
 
 				<h2>Steps</h2>
