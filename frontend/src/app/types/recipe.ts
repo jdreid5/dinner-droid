@@ -38,3 +38,19 @@ export type Nutrition = {
 	fibre?: number | null;
 	salt?: number | null;
 }
+
+export type PlanItemSummary = {
+	recipeId: number;
+	title: string;
+	imageUrl: string | null;
+	cookMinutes: number | null;
+	dayIndex: number | null;
+};
+
+export type Plan = {
+	id: number;
+	startsOn: string;
+	notes: string | null;
+	createdAt: string;
+	items: PlanItemSummary[];
+};

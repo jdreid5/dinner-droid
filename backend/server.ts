@@ -302,6 +302,146 @@ app.get("/api/recipes/:id", async (req: Request, res: Response) => {
 	}
 });
 
+app.get("/api/plans", async (req: Request, res: Response) => {
+	try {
+		const plans = await prisma.plan.findMany({
+			orderBy: { startsOn: "desc" },
+			include: {
+				items: {
+					include: {
+						recipe: {
+							select: { id: true, title: true, imageUrl: true, cookMinutes: true }
+						}
+					},
+					orderBy: { dayIndex: "asc" }
+				}
+			}
+		});
+
+		return res.json(plans.map(plan => ({
+			id: plan.id,
+			startsOn: plan.startsOn.toISOString(),
+			notes: plan.notes,
+			createdAt: plan.createdAt.toISOString(),
+			items: plan.items.map(item => ({
+				recipeId: item.recipeId,
+				title: item.recipe.title,
+				imageUrl: item.recipe.imageUrl,
+				cookMinutes: item.recipe.cookMinutes,
+				dayIndex: item.dayIndex,
+			}))
+		})));
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+app.get("/api/plans/:id", async (req: Request, res: Response) => {
+	try {
+		const id = Number(req.params.id);
+
+		if (isNaN(id)) {
+			return res
+				.status(400)
+				.json({ error: "Invalid plan ID" });
+		}
+
+		const plan = await prisma.plan.findUnique({
+			where: { id },
+			include: {
+				items: {
+					include: {
+						recipe: {
+							select: { id: true, title: true, imageUrl: true, cookMinutes: true }
+						}
+					},
+					orderBy: { dayIndex: "asc" }
+				}
+			}
+		});
+
+		if (!plan) {
+			return res.status(404).json({ error: "Plan not found" });
+		}
+
+		return res.json({
+			id: plan.id,
+			startsOn: plan.startsOn.toISOString(),
+			notes: plan.notes,
+			createdAt: plan.createdAt.toISOString(),
+			items: plan.items.map(item => ({
+				recipeId: item.recipeId,
+				title: item.recipe.title,
+				imageUrl: item.recipe.imageUrl,
+				cookMinutes: item.recipe.cookMinutes,
+				dayIndex: item.dayIndex,
+			}))
+		});
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+app.post("/api/plans", async (req: Request, res: Response) => {
+	try {
+		const b = req.body;
+
+		if (!b || !Array.isArray(b.recipeIds) || b.recipeIds.length === 0) {
+			return res
+				.status(400)
+				.json({ error: "recipeIds is required (non-empty array of numbers)" });
+		}
+
+		const recipeIds: number[] = b.recipeIds.map(Number);
+		const startsOn = b.startsOn ? new Date(b.startsOn) : new Date();
+
+		const plan = await prisma.plan.create({
+			data: {
+				startsOn,
+				notes: b.notes ?? null,
+				items: {
+					create: recipeIds.map((id, i) => ({ recipeId: id, dayIndex: i }))
+				}
+			},
+			include: {
+				items: {
+					include: {
+						recipe: {
+							select: { id: true, title: true, imageUrl: true, cookMinutes: true }
+						}
+					},
+					orderBy: { dayIndex: "asc" }
+				}
+			}
+		});
+
+		return res.json({
+			id: plan.id,
+			startsOn: plan.startsOn.toISOString(),
+			notes: plan.notes,
+			createdAt: plan.createdAt.toISOString(),
+			items: plan.items.map(item => ({
+				recipeId: item.recipeId,
+				title: item.recipe.title,
+				imageUrl: item.recipe.imageUrl,
+				cookMinutes: item.recipe.cookMinutes,
+				dayIndex: item.dayIndex,
+			}))
+		});
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () =>
   	console.log(`Importer API listening on http://localhost:${PORT}`)
