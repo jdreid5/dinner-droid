@@ -442,6 +442,94 @@ app.post("/api/plans", async (req: Request, res: Response) => {
 	}
 });
 
+app.delete("/api/plans/:id", async (req: Request, res: Response) => {
+	try {
+		const id = Number(req.params.id);
+		
+		if (isNaN(id)) {
+			return res
+				.status(400)
+				.json({ error: "Invalid plan ID" });
+		}
+
+		const deletedPlan = await prisma.plan.delete({
+			where: { id }
+		});
+
+		return res.json({ ok: true, id: deletedPlan.id });
+	} catch (err: any) {
+		if (err?.code === "P2025") {
+			return res.status(404).json({ error: "Plan not found" });
+		}
+
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+})
+
+app.get("/api/plans/:id/shopping-list", async (req: Request, res: Response) => {
+	try {
+		const id = Number(req.params.id);
+		if (isNaN(id)) {
+			return res.status(400).json({ error: "Invalid plan ID" });
+		}
+
+		const portions = Number(req.query.portions) || 2;
+
+		const plan = await prisma.plan.findUnique({
+			where: { id },
+			include: {
+				items: {
+					include: {
+						recipe: {
+							include: {
+								items: { include: { ingredient: true } }
+							}
+						}
+					}
+				}
+			}
+		});
+
+		if (!plan) {
+			return res.status(404).json({ error: "Plan not found" });
+		}
+
+		const totals = new Map<string, { qty: number; unit: string | null; isPantry: boolean }>();
+
+		for (const planItem of plan.items) {
+			const baseServings = planItem.recipe.servings ?? 2;
+			const scale = portions / baseServings;
+
+			for (const ri of planItem.recipe.items) {
+				const key = ri.ingredient.name + "|" + (ri.unit ?? "");
+				const cur = totals.get(key) ?? { qty: 0, unit: ri.unit ?? null, isPantry: ri.ingredient.isPantry };
+				cur.qty += (ri.qty ?? 1) * scale;
+				totals.set(key, cur);
+			}
+		}
+
+		const items = [...totals.entries()].map(([key, v]) => {
+			const [name] = key.split("|");
+			return {
+				name,
+				qty: v.qty > 0 ? Math.round(v.qty * 100) / 100 : null,
+				unit: v.unit,
+				isPantry: v.isPantry,
+			};
+		});
+
+		return res.json({ items });
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
 const PORT = Number(process.env.PORT ?? 3001);
 app.listen(PORT, () =>
   	console.log(`Importer API listening on http://localhost:${PORT}`)

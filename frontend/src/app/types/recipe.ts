@@ -54,3 +54,10 @@ export type Plan = {
 	createdAt: string;
 	items: PlanItemSummary[];
 };
+
+export type ShoppingListItem = {
+	name: string;
+	qty: number | null;
+	unit: string | null;
+	isPantry: boolean;
+};

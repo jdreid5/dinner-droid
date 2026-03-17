@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getRecipe } from "@/lib/api";
 import { IngredientsTable } from "./IngredientsTable";
 import { NutritionalTable } from "./NutritionalTable";
@@ -12,6 +13,12 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 		<div>
 			<h1>{recipe.title}</h1>
 			<p>{recipe.cookMinutes} minutes</p>
+			<Link
+				href={`/plan/new?recipeIds=${recipe.id}`}
+				className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors mb-4"
+			>
+				+ Add to Plan
+			</Link>
 			<img src={recipe.imageUrl || ""} alt={`aerial photo of ${recipe.title}`} />
 			<PortionProvider>
 				<PortionSelector />
