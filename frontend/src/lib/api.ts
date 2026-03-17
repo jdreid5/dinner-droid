@@ -1,6 +1,6 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
-import type { Recipe, Plan } from "@/app/types/recipe";
+import type { Recipe, Plan, ShoppingListItem } from "@/app/types/recipe";
 
 export async function getRecipes(): Promise<Recipe[]> {
 	const res = await fetch(`${API_BASE}/api/recipes`, { cache: "no-store" });
@@ -50,6 +50,26 @@ export async function createPlan(recipeIds: number[], notes?: string): Promise<P
 	});
 	if (!res.ok) {
 		throw new Error(`Failed to create plan: ${res.statusText}`);
+	}
+	return res.json();
+}
+
+export async function getShoppingList(planId: string | number, portions: number = 2): Promise<{ items: ShoppingListItem[] }> {
+	const res = await fetch(`${API_BASE}/api/plans/${planId}/shopping-list?portions=${portions}`, { cache: "no-store" });
+	if (!res.ok) {
+		throw new Error(`Failed to fetch shopping list: ${res.statusText}`);
+	}
+	return res.json();
+}
+
+export async function deletePlan(id: string | number): Promise<{ ok: boolean; id: number }> {
+	const res = await fetch(`${API_BASE}/api/plans/${id}`, {
+		method: "DELETE"
+	});
+	if (!res.ok) {
+		const responseText = await res.text();
+		const detail = responseText ? ` - ${responseText}` : "";
+		throw new Error(`Failed to delete plan (${res.status} ${res.statusText})${detail}`);
 	}
 	return res.json();
 }
