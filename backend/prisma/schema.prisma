@@ -15,14 +15,68 @@ datasource db {
 
 // ---- Users ----
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                Int                      @id @default(autoincrement())
+  email             String                   @unique
+  name              String?
+  passwordHash      String?
+  emailVerifiedAt   DateTime?
+  passwordUpdatedAt DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
 
   recipes Recipe[]
   plans   Plan[]
+  sessions Session[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    Int
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  lastUsedAt DateTime?
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     Int
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     Int
+  email      String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ---- Core recipe domain ----
