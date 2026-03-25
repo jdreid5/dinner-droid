@@ -49,8 +49,10 @@ export default function ShoppingList({ planId }: { planId: number }) {
 	const pantryItems = items.filter((i) => i.isPantry);
 
 	const formatQty = (item: ShoppingListItem) => {
-		// if (!item.qty) item.qty = 1;
 		const unit = item.unit ? ` ${item.unit}` : "";
+		if (item.isPantry) {
+			return `${item.name}`;
+		}
 		return `${item.qty}${unit} ${item.name}`;
 	};
 
