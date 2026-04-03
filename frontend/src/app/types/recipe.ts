@@ -61,3 +61,9 @@ export type ShoppingListItem = {
 	unit: string | null;
 	isPantry: boolean;
 };
+
+export type User = {
+	id: number;
+	email: string;
+	name: string | null;
+};

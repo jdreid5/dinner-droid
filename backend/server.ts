@@ -1,11 +1,24 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { PrismaClient } from "@prisma/client";
+import {
+	hashPassword,
+	verifyPassword,
+	createSessionToken,
+	setSessionCookie,
+	clearSessionCookie,
+	createAuthMiddleware,
+} from "./auth";
 
 const app = express();
 const prisma = new PrismaClient();
+const authenticate = createAuthMiddleware(prisma);
 
-app.use(cors());
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
+
+app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
+app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
 
 // ----- Types -----
@@ -528,6 +541,99 @@ app.get("/api/plans/:id/shopping-list", async (req: Request, res: Response) => {
 			.status(500)
 			.json({ ok: false, error: err?.message ?? "Server error" });
 	}
+});
+
+// ----- Auth Routes -----
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+app.post("/api/auth/signup", async (req: Request, res: Response) => {
+	try {
+		const { email, password, name } = req.body ?? {};
+
+		if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
+			return res.status(400).json({ error: "A valid email is required" });
+		}
+		if (!password || typeof password !== "string" || password.length < 8) {
+			return res.status(400).json({ error: "Password must be at least 8 characters" });
+		}
+
+		const existing = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+		if (existing) {
+			return res.status(409).json({ error: "Email already in use" });
+		}
+
+		const passwordHash = await hashPassword(password);
+		const user = await prisma.user.create({
+			data: {
+				email: email.trim().toLowerCase(),
+				name: name?.trim() || null,
+				passwordHash,
+			},
+			select: { id: true, email: true, name: true },
+		});
+
+		const token = await createSessionToken(prisma, user.id, req);
+		setSessionCookie(res, token);
+
+		return res.status(201).json({ user });
+	} catch (err: any) {
+		console.error(err);
+		return res.status(500).json({ error: err?.message ?? "Server error" });
+	}
+});
+
+app.post("/api/auth/login", async (req: Request, res: Response) => {
+	try {
+		const { email, password } = req.body ?? {};
+
+		if (!email || typeof email !== "string") {
+			return res.status(400).json({ error: "Email is required" });
+		}
+		if (!password || typeof password !== "string") {
+			return res.status(400).json({ error: "Password is required" });
+		}
+
+		const user = await prisma.user.findUnique({
+			where: { email: email.trim().toLowerCase() },
+			select: { id: true, email: true, name: true, passwordHash: true },
+		});
+
+		if (!user || !user.passwordHash) {
+			return res.status(401).json({ error: "Invalid email or password" });
+		}
+
+		const valid = await verifyPassword(user.passwordHash, password);
+		if (!valid) {
+			return res.status(401).json({ error: "Invalid email or password" });
+		}
+
+		const token = await createSessionToken(prisma, user.id, req);
+		setSessionCookie(res, token);
+
+		return res.json({ user: { id: user.id, email: user.email, name: user.name } });
+	} catch (err: any) {
+		console.error(err);
+		return res.status(500).json({ error: err?.message ?? "Server error" });
+	}
+});
+
+app.post("/api/auth/logout", authenticate, async (req: Request, res: Response) => {
+	try {
+		await prisma.session.update({
+			where: { id: req.auth!.session.id },
+			data: { revokedAt: new Date() },
+		});
+
+		clearSessionCookie(res);
+		return res.json({ ok: true });
+	} catch (err: any) {
+		console.error(err);
+		return res.status(500).json({ error: err?.message ?? "Server error" });
+	}
+});
+
+app.get("/api/auth/me", authenticate, async (req: Request, res: Response) => {
+	return res.json({ user: req.auth!.user });
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
