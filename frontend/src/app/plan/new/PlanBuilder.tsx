@@ -3,30 +3,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Recipe } from "@/app/types/recipe";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
+import { createPlan } from "@/lib/api";
 
 type SelectedRecipe = Pick<Recipe, "id" | "title" | "imageUrl" | "cookMinutes">;
 
 async function searchRecipes(query: string): Promise<Recipe[]> {
 	const endpoint = query
-		? `${API_BASE}/api/searched-recipes?searchTerm=${encodeURIComponent(query)}`
-		: `${API_BASE}/api/recipes`;
+		? `/api/searched-recipes?searchTerm=${encodeURIComponent(query)}`
+		: `/api/recipes`;
 	const res = await fetch(endpoint);
 	if (!res.ok) throw new Error("Failed to fetch recipes");
-	return res.json();
-}
-
-async function postPlan(recipeIds: number[], notes?: string) {
-	const res = await fetch(`${API_BASE}/api/plans`, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ recipeIds, notes }),
-	});
-	if (!res.ok) {
-		const body = await res.text();
-		throw new Error(`Failed to create plan (${res.status}): ${body}`);
-	}
 	return res.json();
 }
 
@@ -84,7 +70,7 @@ export default function PlanBuilder({
 		setSubmitting(true);
 		setError(null);
 		try {
-			const plan = await postPlan(
+			const plan = await createPlan(
 				selected.map((s) => s.id),
 				notes || undefined,
 			);

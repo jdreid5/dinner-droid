@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getRecipe } from "@/lib/api";
 import type { Recipe } from "@/app/types/recipe";
 import PlanBuilder from "./PlanBuilder";
@@ -10,6 +12,14 @@ export default async function NewPlanPage({
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	const { recipeIds } = await searchParams;
+	const nextPath =
+		typeof recipeIds === "string" && recipeIds.trim()
+			? `/plan/new?recipeIds=${encodeURIComponent(recipeIds)}`
+			: "/plan/new";
+	const cookieStore = await cookies();
+	if (!cookieStore.get("dd_session")) {
+		redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+	}
 	let initialRecipes: SelectedRecipe[] = [];
 
 	if (typeof recipeIds === "string" && recipeIds.trim()) {

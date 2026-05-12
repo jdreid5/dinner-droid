@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ShoppingListItem } from "@/app/types/recipe";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
+import { getShoppingList } from "@/lib/api";
 
 export default function ShoppingList({ planId }: { planId: number }) {
 	const [portions, setPortions] = useState(2);
@@ -16,11 +15,7 @@ export default function ShoppingList({ planId }: { planId: number }) {
 		setLoading(true);
 		setError(null);
 		try {
-			const res = await fetch(
-				`${API_BASE}/api/plans/${planId}/shopping-list?portions=${p}`
-			);
-			if (!res.ok) throw new Error("Failed to fetch shopping list");
-			const data = await res.json();
+			const data = await getShoppingList(planId, p);
 			setItems(data.items);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : "Something went wrong");

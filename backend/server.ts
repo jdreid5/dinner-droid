@@ -315,9 +315,10 @@ app.get("/api/recipes/:id", async (req: Request, res: Response) => {
 	}
 });
 
-app.get("/api/plans", async (req: Request, res: Response) => {
+app.get("/api/plans", authenticate, async (req: Request, res: Response) => {
 	try {
 		const plans = await prisma.plan.findMany({
+			where: { ownerId: req.auth!.user.id },
 			orderBy: { startsOn: "desc" },
 			include: {
 				items: {
@@ -352,7 +353,7 @@ app.get("/api/plans", async (req: Request, res: Response) => {
 	}
 });
 
-app.get("/api/plans/:id", async (req: Request, res: Response) => {
+app.get("/api/plans/:id", authenticate, async (req: Request, res: Response) => {
 	try {
 		const id = Number(req.params.id);
 
@@ -380,6 +381,10 @@ app.get("/api/plans/:id", async (req: Request, res: Response) => {
 			return res.status(404).json({ error: "Plan not found" });
 		}
 
+		if (plan.ownerId !== req.auth!.user.id) {
+			return res.status(403).json({ error: "Forbidden" });
+		}
+
 		return res.json({
 			id: plan.id,
 			startsOn: plan.startsOn.toISOString(),
@@ -401,7 +406,7 @@ app.get("/api/plans/:id", async (req: Request, res: Response) => {
 	}
 });
 
-app.post("/api/plans", async (req: Request, res: Response) => {
+app.post("/api/plans", authenticate, async (req: Request, res: Response) => {
 	try {
 		const b = req.body;
 
@@ -418,6 +423,7 @@ app.post("/api/plans", async (req: Request, res: Response) => {
 			data: {
 				startsOn,
 				notes: b.notes ?? null,
+				ownerId: req.auth!.user.id,
 				items: {
 					create: recipeIds.map((id, i) => ({ recipeId: id, dayIndex: i }))
 				}
@@ -455,7 +461,7 @@ app.post("/api/plans", async (req: Request, res: Response) => {
 	}
 });
 
-app.delete("/api/plans/:id", async (req: Request, res: Response) => {
+app.delete("/api/plans/:id", authenticate, async (req: Request, res: Response) => {
 	try {
 		const id = Number(req.params.id);
 		
@@ -463,6 +469,14 @@ app.delete("/api/plans/:id", async (req: Request, res: Response) => {
 			return res
 				.status(400)
 				.json({ error: "Invalid plan ID" });
+		}
+
+		const existing = await prisma.plan.findUnique({ where: { id } });
+		if (!existing) {
+			return res.status(404).json({ error: "Plan not found" });
+		}
+		if (existing.ownerId !== req.auth!.user.id) {
+			return res.status(403).json({ error: "Forbidden" });
 		}
 
 		const deletedPlan = await prisma.plan.delete({
@@ -482,7 +496,7 @@ app.delete("/api/plans/:id", async (req: Request, res: Response) => {
 	}
 })
 
-app.get("/api/plans/:id/shopping-list", async (req: Request, res: Response) => {
+app.get("/api/plans/:id/shopping-list", authenticate, async (req: Request, res: Response) => {
 	try {
 		const id = Number(req.params.id);
 		if (isNaN(id)) {
@@ -508,6 +522,10 @@ app.get("/api/plans/:id/shopping-list", async (req: Request, res: Response) => {
 
 		if (!plan) {
 			return res.status(404).json({ error: "Plan not found" });
+		}
+
+		if (plan.ownerId !== req.auth!.user.id) {
+			return res.status(403).json({ error: "Forbidden" });
 		}
 
 		const totals = new Map<string, { qty: number; unit: string | null; isPantry: boolean }>();

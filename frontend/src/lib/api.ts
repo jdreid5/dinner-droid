@@ -1,9 +1,51 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
-
 import type { Recipe, Plan, ShoppingListItem, User } from "@/app/types/recipe";
 
+export class ApiError extends Error {
+	constructor(
+		message: string,
+		public readonly status: number,
+		public readonly statusText: string,
+		public readonly body: string,
+	) {
+		super(message);
+		this.name = "ApiError";
+	}
+}
+
+function getApiBase(): string {
+	if (typeof window !== "undefined") return "";
+	return process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001";
+}
+
+async function authHeaders(): Promise<HeadersInit> {
+	if (typeof window !== "undefined") return {};
+	const { cookies } = await import("next/headers");
+	const cookieStore = await cookies();
+	const session = cookieStore.get("dd_session");
+	return session ? { Cookie: `dd_session=${session.value}` } : {};
+}
+
+async function apiError(res: Response, fallback: string): Promise<ApiError> {
+	const body = await res.text();
+	let detail = body;
+	try {
+		const json = JSON.parse(body);
+		detail = typeof json.error === "string" ? json.error : body;
+	} catch {
+		// Keep the response text when the backend does not send JSON.
+	}
+
+	const message = detail
+		? `${fallback} (${res.status} ${res.statusText}): ${detail}`
+		: `${fallback} (${res.status} ${res.statusText})`;
+	return new ApiError(message, res.status, res.statusText, body);
+}
+
 export async function getRecipes(): Promise<Recipe[]> {
-	const res = await fetch(`${API_BASE}/api/recipes`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/recipes`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
 	if (!res.ok) {
 		throw new Error(`Failed to fetch recipes: ${res.statusText}`);
 	}
@@ -11,7 +53,10 @@ export async function getRecipes(): Promise<Recipe[]> {
 }
 
 export async function getRecipe(id: string | number): Promise<Recipe> {
-	const res = await fetch(`${API_BASE}/api/recipes/${id}`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/recipes/${id}`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
 	if (!res.ok) {
 		throw new Error(`Failed to fetch recipe: ${res.statusText}`);
 	}
@@ -19,7 +64,10 @@ export async function getRecipe(id: string | number): Promise<Recipe> {
 }
 
 export async function getSearchedRecipes(query: string): Promise<Recipe[]> {
-	const res = await fetch(`${API_BASE}/api/searched-recipes?searchTerm=${query}`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/searched-recipes?searchTerm=${query}`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
 	if (!res.ok) {
 		throw new Error(`Failed to fetch searched recipes: ${res.statusText}`);
 	}
@@ -27,49 +75,60 @@ export async function getSearchedRecipes(query: string): Promise<Recipe[]> {
 }
 
 export async function getPlans(): Promise<Plan[]> {
-	const res = await fetch(`${API_BASE}/api/plans`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/plans`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
 	if (!res.ok) {
-		throw new Error(`Failed to fetch plans: ${res.statusText}`);
+		throw await apiError(res, "Failed to fetch plans");
 	}
 	return res.json();
 }
 
 export async function getPlan(id: string | number): Promise<Plan> {
-	const res = await fetch(`${API_BASE}/api/plans/${id}`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/plans/${id}`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
 	if (!res.ok) {
-		throw new Error(`Failed to fetch plan: ${res.statusText}`);
+		throw await apiError(res, "Failed to fetch plan");
 	}
 	return res.json();
 }
 
 export async function createPlan(recipeIds: number[], notes?: string): Promise<Plan> {
-	const res = await fetch(`${API_BASE}/api/plans`, {
+	const res = await fetch(`${getApiBase()}/api/plans`, {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		headers: { "Content-Type": "application/json", ...(await authHeaders()) },
 		body: JSON.stringify({ recipeIds, notes }),
+		credentials: "same-origin",
 	});
 	if (!res.ok) {
-		throw new Error(`Failed to create plan: ${res.statusText}`);
+		throw await apiError(res, "Failed to create plan");
 	}
 	return res.json();
 }
 
 export async function getShoppingList(planId: string | number, portions: number = 2): Promise<{ items: ShoppingListItem[] }> {
-	const res = await fetch(`${API_BASE}/api/plans/${planId}/shopping-list?portions=${portions}`, { cache: "no-store" });
+	const res = await fetch(`${getApiBase()}/api/plans/${planId}/shopping-list?portions=${portions}`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+		credentials: "same-origin",
+	});
 	if (!res.ok) {
-		throw new Error(`Failed to fetch shopping list: ${res.statusText}`);
+		throw await apiError(res, "Failed to fetch shopping list");
 	}
 	return res.json();
 }
 
 export async function deletePlan(id: string | number): Promise<{ ok: boolean; id: number }> {
-	const res = await fetch(`${API_BASE}/api/plans/${id}`, {
-		method: "DELETE"
+	const res = await fetch(`${getApiBase()}/api/plans/${id}`, {
+		method: "DELETE",
+		headers: { ...(await authHeaders()) },
+		credentials: "same-origin",
 	});
 	if (!res.ok) {
-		const responseText = await res.text();
-		const detail = responseText ? ` - ${responseText}` : "";
-		throw new Error(`Failed to delete plan (${res.status} ${res.statusText})${detail}`);
+		throw await apiError(res, "Failed to delete plan");
 	}
 	return res.json();
 }

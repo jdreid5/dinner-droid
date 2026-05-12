@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
+import { AuthProvider } from "@/app/context/AuthContext";
+import Navbar from "@/app/components/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,18 +29,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-		<nav className="flex items-center gap-8 border-b border-gray-200 dark:border-gray-700 px-6 py-3">
-			<Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100 mr-auto">
-				Dinner Droid
-			</Link>
-			<Link href="/plan" className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors">
-				My Plans
-			</Link>
-			<Link href="/recipes" className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 transition-colors">
-				Recipes
-			</Link>
-		</nav>
-        {children}
+        <AuthProvider>
+          <Navbar />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

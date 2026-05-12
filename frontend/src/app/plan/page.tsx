@@ -1,13 +1,24 @@
 import Link from "next/link";
-import { getPlans } from "@/lib/api";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ApiError, getPlans } from "@/lib/api";
 import PlanList from "./PlanList";
 
 export default async function PlanPage() {
+	const cookieStore = await cookies();
+	if (!cookieStore.get("dd_session")) {
+		redirect(`/login?next=${encodeURIComponent("/plan")}`);
+	}
+
 	let plans = [] as Awaited<ReturnType<typeof getPlans>>;
+	let loadError: string | null = null;
 	try {
 		plans = await getPlans();
-	} catch {
-		// Backend may be unreachable or have no data yet -- show empty state
+	} catch (error) {
+		if (error instanceof ApiError && error.status === 401) {
+			redirect(`/login?next=${encodeURIComponent("/plan")}`);
+		}
+		loadError = error instanceof Error ? error.message : "Failed to load plans.";
 	}
 
 	return (
@@ -23,7 +34,13 @@ export default async function PlanPage() {
 					Make a New Plan
 				</Link>
 			</div>
-			<PlanList plans={plans} />
+			{loadError ? (
+				<p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+					{loadError}
+				</p>
+			) : (
+				<PlanList plans={plans} />
+			)}
 		</div>
 	);
 }

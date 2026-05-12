@@ -24,36 +24,48 @@ export function IngredientsTable({ ingredients }: { ingredients: Ingredient[] })
 			nonPantry.push(ingredient);
 		}
 	}
-	
+
 	return (
-		<div>
-			<h2>Ingredients</h2>
-			<table>
-				<tbody>
-					{nonPantry.map((ingredient) => {
-						return (
-							<tr key={ingredient.name}>
-								<td>{ingredient.name}</td>
-								<td>{scaleQuantity(ingredient.qty, ingredient.isPantry, portions)}{ingredient.unit}</td>
-							</tr>				
-						)						
-					})}
-				</tbody>
-			</table>
-			Pantry Ingredients
-			<p>
-				{isPantry.map((ingredient) => {
-					if (isPantry.indexOf(ingredient) !== isPantry.length - 1) {
-						return (
-							<span key={ingredient.name}>{ingredient.name}, </span>
-						)
-					} else {
-						return (
-							<span key={ingredient.name}>{ingredient.name}</span>
-						)
-					}
+		<div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
+			<h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
+				Ingredients
+			</h2>
+			<ul className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
+				{nonPantry.map((ingredient) => {
+					const qty = scaleQuantity(ingredient.qty, ingredient.isPantry, portions);
+					return (
+						<li
+							key={ingredient.name}
+							className="flex items-center justify-between py-2"
+						>
+							<span className="text-sm text-gray-700 dark:text-gray-200">
+								{ingredient.name}
+							</span>
+							<span className="text-sm text-gray-500 tabular-nums">
+								{qty}{ingredient.unit}
+							</span>
+						</li>
+					)
 				})}
-			</p>
+			</ul>
+
+			{isPantry.length > 0 && (
+				<div className="mt-5">
+					<h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
+						Pantry
+					</h3>
+					<div className="flex flex-wrap gap-2">
+						{isPantry.map((ingredient) => (
+							<span
+								key={ingredient.name}
+								className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs text-gray-600 dark:text-gray-300"
+							>
+								{ingredient.name}
+							</span>
+						))}
+					</div>
+				</div>
+			)}
 		</div>
 	)
 }

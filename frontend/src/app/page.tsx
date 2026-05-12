@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getPlans } from "@/lib/api";
 import type { Plan } from "@/app/types/recipe";
 
@@ -12,11 +13,16 @@ function formatDate(iso: string) {
 }
 
 export default async function Home() {
+	const cookieStore = await cookies();
+	const isLoggedIn = !!cookieStore.get("dd_session");
+
 	let plans: Plan[] = [];
-	try {
-		plans = await getPlans();
-	} catch {
-		// Backend may be unreachable
+	if (isLoggedIn) {
+		try {
+			plans = await getPlans();
+		} catch {
+			// Backend may be unreachable or session expired
+		}
 	}
 
 	const latestPlan = plans.length > 0 ? plans[0] : null;
@@ -64,7 +70,7 @@ export default async function Home() {
 						</Link>
 					</div>
 				</div>
-			) : (
+			) : isLoggedIn ? (
 				<div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-10 text-center mb-8">
 					<p className="text-gray-500 mb-4">You don&apos;t have any plans yet.</p>
 					<Link
@@ -74,15 +80,27 @@ export default async function Home() {
 						Create Your First Plan
 					</Link>
 				</div>
+			) : (
+				<div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-10 text-center mb-8">
+					<p className="text-gray-500 mb-4">Log in to see your meal plans.</p>
+					<Link
+						href="/login"
+						className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition-colors"
+					>
+						Log In
+					</Link>
+				</div>
 			)}
 
 			<div className="flex gap-4">
-				<Link
-					href="/plan/new"
-					className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
-				>
-					New Plan
-				</Link>
+				{isLoggedIn && (
+					<Link
+						href="/plan/new"
+						className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
+					>
+						New Plan
+					</Link>
+				)}
 				<Link
 					href="/recipes"
 					className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
