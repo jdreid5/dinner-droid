@@ -5,6 +5,10 @@ import { NutritionalTable } from "./NutritionalTable";
 import { PortionProvider } from "./PortionContext";
 import { PortionSelector } from "./PortionSelector";
 
+function formatStepBody(body: string) {
+	return body.charAt(0) + body.slice(1).replace(/([A-Z])/g, "\n$1");
+}
+
 export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = await params;
 	const recipe = await getRecipe(id);
@@ -61,8 +65,8 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 									<span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white text-sm font-medium flex-shrink-0">
 										{step.n}
 									</span>
-									<p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">
-										{step.body}
+									<p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line">
+										{formatStepBody(step.body)}
 									</p>
 								</li>
 							))}

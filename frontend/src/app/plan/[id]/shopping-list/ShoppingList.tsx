@@ -4,6 +4,48 @@ import { useState, useEffect, useCallback } from "react";
 import type { ShoppingListItem } from "@/app/types/recipe";
 import { getShoppingList } from "@/lib/api";
 
+const CSV_HEADERS = ["Name", "Quantity", "Unit"];
+
+const itemKey = (item: ShoppingListItem) =>
+	`${item.name}|${item.unit ?? ""}`;
+
+function escapeCsvValue(value: string | number | null | undefined) {
+	const stringValue = value == null ? "" : String(value);
+	const safeValue = /^[=+\-@]/.test(stringValue)
+		? `'${stringValue}`
+		: stringValue;
+	const escapedValue = safeValue.replaceAll('"', '""');
+
+	if (/[",\r\n]/.test(escapedValue)) {
+		return `"${escapedValue}"`;
+	}
+
+	return escapedValue;
+}
+
+function buildShoppingListCsv(
+	shoppingItems: ShoppingListItem[],
+	pantryItems: ShoppingListItem[],
+) {
+	const rows = [
+		CSV_HEADERS,
+		...shoppingItems.map((item) => [
+			item.name,
+			item.qty,
+			item.unit,
+		]),
+		...pantryItems.map((item) => [
+			item.name,
+			item.qty,
+			item.unit,
+		]),
+	];
+
+	return `\uFEFF${rows
+		.map((row) => row.map(escapeCsvValue).join(","))
+		.join("\r\n")}\r\n`;
+}
+
 export default function ShoppingList({ planId }: { planId: number }) {
 	const [portions, setPortions] = useState(2);
 	const [items, setItems] = useState<ShoppingListItem[]>([]);
@@ -42,6 +84,7 @@ export default function ShoppingList({ planId }: { planId: number }) {
 
 	const shoppingItems = items.filter((i) => !i.isPantry);
 	const pantryItems = items.filter((i) => i.isPantry);
+	const canExportCsv = !loading && !error && items.length > 0;
 
 	const formatQty = (item: ShoppingListItem) => {
 		const unit = item.unit ? ` ${item.unit}` : "";
@@ -51,8 +94,19 @@ export default function ShoppingList({ planId }: { planId: number }) {
 		return `${item.qty}${unit} ${item.name}`;
 	};
 
-	const itemKey = (item: ShoppingListItem) =>
-		`${item.name}|${item.unit ?? ""}`;
+	const handleExportCsv = () => {
+		const csv = buildShoppingListCsv(shoppingItems, pantryItems);
+		const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+
+		link.href = url;
+		link.download = `shopping-list-plan-${planId}-${portions}-portions.csv`;
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
+		URL.revokeObjectURL(url);
+	};
 
 	const renderSection = (title: string, sectionItems: ShoppingListItem[]) => {
 		if (sectionItems.length === 0) return null;
@@ -112,6 +166,14 @@ export default function ShoppingList({ planId }: { planId: number }) {
 					}}
 					className="w-16 p-1.5 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-sm text-center"
 				/>
+				<button
+					type="button"
+					onClick={handleExportCsv}
+					disabled={!canExportCsv}
+					className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+				>
+					Export CSV
+				</button>
 			</div>
 
 			{loading && (
