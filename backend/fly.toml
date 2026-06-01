@@ -2,7 +2,7 @@
 # IMPORTANT: SQLite is a single-file database with no networking, so this app
 # must run on exactly ONE machine. Do not scale the machine count above 1.
 
-app = "dinner-droid-backend"
+app = "dinner-droid"
 primary_region = "lhr"
 
 [build]

@@ -36,8 +36,14 @@ COPY --from=build /app/prisma ./prisma
 COPY package.json ./
 COPY docker-entrypoint.sh ./
 
-# Bundle the current SQLite database as a one-time seed for the volume.
-RUN cp ./prisma/dev.db ./prisma/seed.db || true
+# Bundle the current SQLite database (if present in the build context) as a
+# one-time seed for the volume. If it is missing, the app still boots and
+# `prisma migrate deploy` creates an empty schema on first start.
+RUN if [ -f ./prisma/dev.db ]; then \
+      cp ./prisma/dev.db ./prisma/seed.db && rm -f ./prisma/dev.db && echo "Bundled seed.db from dev.db"; \
+    else \
+      echo "WARNING: no prisma/dev.db in build context; the volume will start with an empty database"; \
+    fi
 RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3001
