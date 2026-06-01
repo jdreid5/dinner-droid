@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@flydotio/litestream": "^1.0.1",
     "@prisma/client": "^6.19.0",
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
@@ -33,5 +34,8 @@
     "prisma": "^6.19.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
+  },
+  "dockerfile": {
+    "litestream": true
   }
 }
