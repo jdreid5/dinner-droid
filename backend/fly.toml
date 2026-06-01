@@ -1,0 +1,32 @@
+# Fly.io configuration for the Dinner Droid backend (Express + Prisma + SQLite).
+# IMPORTANT: SQLite is a single-file database with no networking, so this app
+# must run on exactly ONE machine. Do not scale the machine count above 1.
+
+app = "dinner-droid-backend"
+primary_region = "lhr"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3001"
+  # SQLite database file lives on the mounted volume so it survives deploys.
+  DATABASE_URL = "file:/data/dev.db"
+  # Public URL of your deployed frontend (used for CORS + cookies).
+  FRONTEND_ORIGIN = "https://your-frontend.example.com"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  # Keep this at 1 so the single SQLite machine stays available.
+  min_machines_running = 1
+
+[mounts]
+  source = "dinner_droid_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

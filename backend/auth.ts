@@ -17,6 +17,11 @@ declare global {
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 const COOKIE_NAME = "dd_session";
 
+// In production the API and frontend are on different domains, so the session
+// cookie must be SameSite=None + Secure to be sent on cross-site requests.
+const IS_PROD = process.env.NODE_ENV === "production";
+const COOKIE_SAME_SITE: "none" | "lax" = IS_PROD ? "none" : "lax";
+
 export function hashPassword(plain: string): Promise<string> {
 	return argon2.hash(plain);
 }
@@ -53,19 +58,19 @@ export async function createSessionToken(
 export function setSessionCookie(res: Response, token: string): void {
 	res.cookie(COOKIE_NAME, token, {
 		httpOnly: true,
-		sameSite: "lax",
+		sameSite: COOKIE_SAME_SITE,
 		path: "/",
 		maxAge: SESSION_MAX_AGE_MS,
-		secure: process.env.NODE_ENV === "production",
+		secure: IS_PROD,
 	});
 }
 
 export function clearSessionCookie(res: Response): void {
 	res.clearCookie(COOKIE_NAME, {
 		httpOnly: true,
-		sameSite: "lax",
+		sameSite: COOKIE_SAME_SITE,
 		path: "/",
-		secure: process.env.NODE_ENV === "production",
+		secure: IS_PROD,
 	});
 }
 

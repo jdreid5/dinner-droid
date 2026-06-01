@@ -17,6 +17,11 @@ const authenticate = createAuthMiddleware(prisma);
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:3000";
 
+// Behind Fly.io's proxy: trust X-Forwarded-* so secure cookies and req.ip work.
+if (process.env.NODE_ENV === "production") {
+	app.set("trust proxy", 1);
+}
+
 app.use(cors({ origin: FRONTEND_ORIGIN, credentials: true }));
 app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
@@ -655,6 +660,6 @@ app.get("/api/auth/me", authenticate, async (req: Request, res: Response) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
-app.listen(PORT, () =>
-  	console.log(`Importer API listening on http://localhost:${PORT}`)
+app.listen(PORT, "0.0.0.0", () =>
+  	console.log(`Importer API listening on port ${PORT}`)
 );
