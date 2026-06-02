@@ -23,9 +23,10 @@ bun.lockb
 .envrc
 
 # Prisma
+# NOTE: prisma/migrations/ is intentionally tracked — migrations are source code
+# and must be committed so deploys (incl. Git-based builds) can apply them.
 **/dev.db
 **/*.db-journal
-**/prisma/migrations/
 **/prisma/seed-output.json
 
 # OS / Editor junk

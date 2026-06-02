@@ -6,7 +6,7 @@ import { PortionProvider } from "./PortionContext";
 import { PortionSelector } from "./PortionSelector";
 
 function formatStepBody(body: string) {
-	return body.charAt(0) + body.slice(1).replace(/([A-Z])/g, "\n$1");
+	return body.charAt(0) + body.slice(1).replace(/([A-Z])/g, "$1");
 }
 
 export default async function RecipePage({ params }: { params: Promise<{ id: string }> }) {
