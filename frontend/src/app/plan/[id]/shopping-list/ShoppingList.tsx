@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { ShoppingListItem } from "@/app/types/recipe";
 import { getShoppingList } from "@/lib/api";
+import { Button, Input, SectionHeading } from "@/app/components/ui";
 
 const CSV_HEADERS = ["Name", "Quantity", "Unit"];
 
@@ -112,9 +113,7 @@ export default function ShoppingList({ planId }: { planId: number }) {
 		if (sectionItems.length === 0) return null;
 		return (
 			<div className="mb-6">
-				<h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-					{title}
-				</h2>
+				{title && <SectionHeading as="h2" className="mb-3">{title}</SectionHeading>}
 				<ul className="flex flex-col gap-1">
 					{sectionItems.map((item) => {
 						const key = itemKey(item);
@@ -122,7 +121,7 @@ export default function ShoppingList({ planId }: { planId: number }) {
 						return (
 							<li key={key}>
 								<label
-									className={`flex items-center gap-3 rounded-md px-3 py-2 cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+									className={`flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition-colors hover:bg-surface ${
 										isChecked ? "opacity-50" : ""
 									}`}
 								>
@@ -130,10 +129,10 @@ export default function ShoppingList({ planId }: { planId: number }) {
 										type="checkbox"
 										checked={isChecked}
 										onChange={() => toggleItem(key)}
-										className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+										className="h-4 w-4 rounded border-border accent-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
 									/>
 									<span
-										className={`text-sm text-gray-700 dark:text-gray-200 ${
+										className={`text-sm text-ink ${
 											isChecked ? "line-through" : ""
 										}`}
 									>
@@ -150,44 +149,48 @@ export default function ShoppingList({ planId }: { planId: number }) {
 
 	return (
 		<div>
-			<div className="flex items-center gap-3 mb-6">
-				<label htmlFor="portions" className="text-sm font-medium text-gray-600 dark:text-gray-300">
-					Portions:
-				</label>
-				<input
-					id="portions"
-					type="number"
-					min={1}
-					max={10}
-					value={portions}
-					onChange={(e) => {
-						const val = Number(e.target.value);
-						if (val >= 1 && val <= 10) setPortions(val);
-					}}
-					className="w-16 p-1.5 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-sm text-center"
-				/>
-				<button
-					type="button"
-					onClick={handleExportCsv}
-					disabled={!canExportCsv}
-					className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
-				>
-					Export CSV
-				</button>
+			<div className="mb-6 flex flex-wrap items-center gap-3">
+				<div className="flex flex-wrap items-center gap-3">
+					<div className="flex items-center gap-2">
+						<label htmlFor="portions" className="text-sm font-medium text-ink">
+							Portions
+						</label>
+						<Input
+							id="portions"
+							type="number"
+							min={1}
+							max={10}
+							value={portions}
+							onChange={(e) => {
+								const val = Number(e.target.value);
+								if (val >= 1 && val <= 10) setPortions(val);
+							}}
+							className="w-14 px-2 text-center tabular-nums"
+						/>
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleExportCsv}
+						disabled={!canExportCsv}
+					>
+						Export CSV
+					</Button>
+				</div>
 			</div>
 
 			{loading && (
-				<p className="text-sm text-gray-400 py-4">Loading...</p>
+				<p className="py-4 text-sm text-muted">Loading...</p>
 			)}
 
 			{error && (
-				<p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/30 rounded-md px-3 py-2 mb-4">
+				<p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/30 dark:text-red-400">
 					{error}
 				</p>
 			)}
 
 			{!loading && !error && items.length === 0 && (
-				<p className="text-sm text-gray-400 py-4">No ingredients found for this plan.</p>
+				<p className="py-4 text-sm text-muted">No ingredients found for this plan.</p>
 			)}
 
 			{!loading && !error && items.length > 0 && (

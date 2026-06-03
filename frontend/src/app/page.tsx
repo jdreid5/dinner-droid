@@ -2,6 +2,13 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { getPlans } from "@/lib/api";
 import type { Plan } from "@/app/types/recipe";
+import { Card, PageContainer, SectionHeading } from "@/app/components/ui";
+
+// Link-styled CTAs that mirror the <Button> variants (links can't be buttons).
+const ctaBase =
+	"inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+const ctaPrimary = `${ctaBase} bg-accent text-white hover:bg-accent-hover`;
+const ctaOutline = `${ctaBase} border border-border bg-transparent text-ink hover:bg-surface`;
 
 function formatDate(iso: string) {
 	return new Date(iso).toLocaleDateString("en-GB", {
@@ -28,86 +35,79 @@ export default async function Home() {
 	const latestPlan = plans.length > 0 ? plans[0] : null;
 
 	return (
-		<div className="max-w-3xl mx-auto px-4 py-12">
-			<h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-				Welcome to Dinner Droid
-			</h1>
-			<p className="text-gray-500 mb-10">
-				Plan your meals, browse recipes, and generate shopping lists.
-			</p>
+		<PageContainer className="max-w-3xl">
+			<header className="mb-10 sm:mb-12">
+				<SectionHeading className="mb-3 text-accent">
+					Dinner Droid
+				</SectionHeading>
+				<h1 className="text-4xl font-semibold tracking-tight text-ink sm:text-5xl">
+					Cook with a little more intention.
+				</h1>
+				<p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">
+					Plan your week, browse recipes worth making again, and turn any plan
+					into a tidy shopping list.
+				</p>
+			</header>
 
 			{latestPlan ? (
-				<div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 mb-8">
-					<h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
-						Latest Plan
-					</h2>
-					<p className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-1">
+				<Card className="mb-8">
+					<SectionHeading className="mb-3">Latest Plan</SectionHeading>
+					<p className="font-serif text-2xl font-semibold text-ink">
 						{formatDate(latestPlan.startsOn)}
 					</p>
-					<p className="text-sm text-gray-500 mb-4">
-						{latestPlan.items.length} recipe{latestPlan.items.length !== 1 && "s"}
+					<p className="mt-1 text-sm text-muted">
+						{latestPlan.items.length} recipe
+						{latestPlan.items.length !== 1 && "s"}
 						{latestPlan.notes && <> &mdash; {latestPlan.notes}</>}
 					</p>
-					<ul className="flex flex-col gap-1 mb-5">
+					<ul className="mt-4 mb-6 flex flex-col divide-y divide-border">
 						{latestPlan.items.map((item) => (
-							<li key={item.recipeId} className="text-sm text-gray-600 dark:text-gray-300">
+							<li
+								key={item.recipeId}
+								className="py-2 text-sm text-ink first:pt-0 last:pb-0"
+							>
 								{item.title}
 							</li>
 						))}
 					</ul>
-					<div className="flex gap-3">
-						<Link
-							href={`/plan/${latestPlan.id}`}
-							className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-						>
+					<div className="flex flex-wrap gap-3">
+						<Link href={`/plan/${latestPlan.id}`} className={`${ctaPrimary} px-4 py-2`}>
 							View Plan
 						</Link>
 						<Link
 							href={`/plan/${latestPlan.id}/shopping-list`}
-							className="border border-blue-500 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+							className={`${ctaOutline} px-4 py-2`}
 						>
 							Shopping List
 						</Link>
 					</div>
-				</div>
-			) : isLoggedIn ? (
-				<div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-10 text-center mb-8">
-					<p className="text-gray-500 mb-4">You don&apos;t have any plans yet.</p>
-					<Link
-						href="/plan/new"
-						className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition-colors"
-					>
-						Create Your First Plan
-					</Link>
-				</div>
+				</Card>
 			) : (
-				<div className="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-10 text-center mb-8">
-					<p className="text-gray-500 mb-4">Log in to see your meal plans.</p>
+				<Card className="mb-8 border-dashed text-center">
+					<p className="mb-5 text-muted">
+						{isLoggedIn
+							? "You don't have any plans yet — let's fix that."
+							: "Log in to see your meal plans and pick up where you left off."}
+					</p>
 					<Link
-						href="/login"
-						className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition-colors"
+						href={isLoggedIn ? "/plan/new" : "/login"}
+						className={`${ctaPrimary} px-6 py-3`}
 					>
-						Log In
+						{isLoggedIn ? "Create Your First Plan" : "Log In"}
 					</Link>
-				</div>
+				</Card>
 			)}
 
-			<div className="flex gap-4">
+			<div className="flex flex-wrap gap-3">
 				{isLoggedIn && (
-					<Link
-						href="/plan/new"
-						className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
-					>
+					<Link href="/plan/new" className={`${ctaPrimary} px-5 py-2.5`}>
 						New Plan
 					</Link>
 				)}
-				<Link
-					href="/recipes"
-					className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
-				>
+				<Link href="/recipes" className={`${ctaOutline} px-5 py-2.5`}>
 					Browse Recipes
 				</Link>
 			</div>
-		</div>
+		</PageContainer>
 	);
 }

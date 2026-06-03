@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deletePlan } from "@/lib/api";
+import { Button } from "@/app/components/ui";
 
 export default function PlanDeleteButton({ planId }: { planId: number }) {
 	const router = useRouter();
@@ -24,15 +25,16 @@ export default function PlanDeleteButton({ planId }: { planId: number }) {
 
 	return (
 		<div>
-			<button
+			<Button
+				variant="danger"
+				size="sm"
 				onClick={handleDelete}
 				disabled={deleting}
-				className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
 			>
 				{deleting ? "Deleting..." : "Delete Plan"}
-			</button>
+			</Button>
 			{error && (
-				<p className="text-sm text-red-500 mt-1">{error}</p>
+				<p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
 			)}
 		</div>
 	);

@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getRecipe } from "@/lib/api";
 import type { Recipe } from "@/app/types/recipe";
+import { PageContainer, SectionHeading } from "@/app/components/ui";
 import PlanBuilder from "./PlanBuilder";
 
 type SelectedRecipe = Pick<Recipe, "id" | "title" | "imageUrl" | "cookMinutes">;
@@ -36,11 +37,12 @@ export default async function NewPlanPage({
 	}
 
 	return (
-		<div className="max-w-5xl mx-auto px-4 py-8">
-			<h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
-				Create a New Plan
-			</h1>
+		<PageContainer>
+			<div className="mb-8">
+				<SectionHeading>New meal plan</SectionHeading>
+				<h1 className="mt-1 text-3xl text-ink">Create a New Plan</h1>
+			</div>
 			<PlanBuilder initialRecipes={initialRecipes} />
-		</div>
+		</PageContainer>
 	);
 }

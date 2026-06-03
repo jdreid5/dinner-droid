@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ApiError, getPlans } from "@/lib/api";
+import { PageContainer, SectionHeading } from "@/app/components/ui";
 import PlanList from "./PlanList";
 
 export default async function PlanPage() {
@@ -22,25 +23,26 @@ export default async function PlanPage() {
 	}
 
 	return (
-		<div className="max-w-3xl mx-auto px-4 py-8">
-			<div className="flex items-center justify-between mb-6">
-				<h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-					Meal Plans
-				</h1>
+		<PageContainer className="max-w-3xl">
+			<div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+				<div>
+					<SectionHeading>Your kitchen</SectionHeading>
+					<h1 className="mt-1 text-3xl text-ink">Meal Plans</h1>
+				</div>
 				<Link
 					href="/plan/new"
-					className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2.5 rounded-md font-medium transition-colors"
+					className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 				>
 					Make a New Plan
 				</Link>
 			</div>
 			{loadError ? (
-				<p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+				<p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/30 dark:text-red-400">
 					{loadError}
 				</p>
 			) : (
 				<PlanList plans={plans} />
 			)}
-		</div>
+		</PageContainer>
 	);
 }

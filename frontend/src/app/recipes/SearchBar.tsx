@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Input } from "@/app/components/ui";
 
 export default function SearchBar() {
 	const router = useRouter();
@@ -32,12 +33,28 @@ export default function SearchBar() {
 	}, [searchTerm, pathname, router, searchParams])
 
 	return (
-		<input 
-			type="text"
-			value={searchTerm}
-			onChange={handleOnChange}
-			placeholder="Search recipes"
-			className="w-full max-w-md p-2 rounded-3xl border border-gray-300"
-		/>
+		<div className="relative w-full max-w-md">
+			<svg
+				className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
+				viewBox="0 0 20 20"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				aria-hidden="true"
+			>
+				<circle cx="9" cy="9" r="6" />
+				<path d="m17 17-3.5-3.5" />
+			</svg>
+			<Input
+				type="search"
+				value={searchTerm}
+				onChange={handleOnChange}
+				placeholder="Search recipes"
+				aria-label="Search recipes"
+				className="rounded-full pl-11"
+			/>
+		</div>
 	)
 }

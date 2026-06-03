@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Recipe } from "@/app/types/recipe";
 import { createPlan } from "@/lib/api";
+import { Badge, Button, Input, SectionHeading, Textarea } from "@/app/components/ui";
 
 type SelectedRecipe = Pick<Recipe, "id" | "title" | "imageUrl" | "cookMinutes">;
 
@@ -84,24 +85,24 @@ export default function PlanBuilder({
 	};
 
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-6">
+		<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
 			{/* Search panel */}
 			<div>
-				<input
+				<Input
 					type="text"
 					value={searchTerm}
 					onChange={(e) => setSearchTerm(e.target.value)}
 					placeholder="Search recipes..."
-					className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 mb-4"
+					className="mb-4"
 					autoFocus
 				/>
 
-				<div className="flex flex-col gap-1 max-h-[60vh] overflow-y-auto">
+				<div className="flex max-h-[60vh] flex-col gap-1 overflow-y-auto">
 					{loading && (
-						<p className="text-sm text-gray-400 text-center py-4">Loading...</p>
+						<p className="py-4 text-center text-sm text-muted">Loading...</p>
 					)}
 					{!loading && results.length === 0 && (
-						<p className="text-sm text-gray-400 text-center py-4">No recipes found.</p>
+						<p className="py-4 text-center text-sm text-muted">No recipes found.</p>
 					)}
 					{!loading &&
 						results.map((recipe) => {
@@ -109,33 +110,34 @@ export default function PlanBuilder({
 							return (
 								<button
 									key={recipe.id}
+									type="button"
 									onClick={() => addRecipe(recipe)}
 									disabled={isSelected}
 									className={`flex items-center gap-3 rounded-md px-3 py-2 text-left transition-colors ${
 										isSelected
-											? "opacity-40 cursor-default"
-											: "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+											? "cursor-default opacity-40"
+											: "cursor-pointer hover:bg-surface"
 									}`}
 								>
 									{recipe.imageUrl && (
 										<img
 											src={recipe.imageUrl}
 											alt=""
-											className="h-10 w-10 rounded object-cover flex-shrink-0"
+											className="h-10 w-10 flex-shrink-0 rounded object-cover"
 										/>
 									)}
-									<span className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-200">
+									<span className="min-w-0 flex-1 text-sm font-medium text-ink">
 										{recipe.title}
 									</span>
 									{recipe.cookMinutes != null && (
-										<span className="text-xs text-gray-400">
+										<span className="text-xs tabular-nums text-muted">
 											{recipe.cookMinutes} min
 										</span>
 									)}
 									{isSelected ? (
-										<span className="text-xs text-green-500">Added</span>
+										<Badge variant="secondary">Added</Badge>
 									) : (
-										<span className="text-xs text-blue-500">+ Add</span>
+										<span className="text-xs font-medium text-accent">+ Add</span>
 									)}
 								</button>
 							);
@@ -144,38 +146,39 @@ export default function PlanBuilder({
 			</div>
 
 			{/* Draft panel */}
-			<div className="lg:border-l lg:border-gray-200 lg:dark:border-gray-700 lg:pl-6">
-				<h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
+			<div className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+				<SectionHeading as="h2" className="mb-3">
 					Your Plan ({selected.length})
-				</h2>
+				</SectionHeading>
 
 				{selected.length === 0 ? (
-					<p className="text-sm text-gray-400 py-4">
+					<p className="py-4 text-sm text-muted">
 						Search and add recipes to get started.
 					</p>
 				) : (
-					<ul className="flex flex-col gap-2 mb-4">
+					<ul className="mb-4 flex flex-col gap-2">
 						{selected.map((s, i) => (
 							<li
 								key={s.id}
-								className="flex items-center gap-3 rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2"
+								className="flex items-center gap-3 rounded-md bg-background px-3 py-2"
 							>
-								<span className="text-xs text-gray-400 w-5 text-right">
+								<span className="w-5 text-right text-xs tabular-nums text-muted">
 									{i + 1}.
 								</span>
 								{s.imageUrl && (
 									<img
 										src={s.imageUrl}
 										alt=""
-										className="h-9 w-9 rounded object-cover flex-shrink-0"
+										className="h-9 w-9 flex-shrink-0 rounded object-cover"
 									/>
 								)}
-								<span className="flex-1 font-medium text-gray-700 dark:text-gray-200 text-sm truncate">
+								<span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
 									{s.title}
 								</span>
 								<button
+									type="button"
 									onClick={() => removeRecipe(s.id)}
-									className="text-xs text-red-400 hover:text-red-600"
+									className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-lg leading-none text-muted transition-colors hover:bg-surface hover:text-red-600 dark:hover:text-red-400"
 									aria-label={`Remove ${s.title}`}
 								>
 									&times;
@@ -185,27 +188,27 @@ export default function PlanBuilder({
 					</ul>
 				)}
 
-				<textarea
+				<Textarea
 					value={notes}
 					onChange={(e) => setNotes(e.target.value)}
 					placeholder="Notes (optional)"
 					rows={2}
-					className="w-full p-2.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 text-sm mb-4"
+					className="mb-4 min-h-0"
 				/>
 
 				{error && (
-					<p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/30 rounded-md px-3 py-2 mb-4">
+					<p className="mb-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/30 dark:text-red-400">
 						{error}
 					</p>
 				)}
 
-				<button
+				<Button
 					onClick={handleCreate}
 					disabled={submitting || selected.length === 0}
-					className="w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
+					className="w-full"
 				>
 					{submitting ? "Creating..." : "Create Plan"}
-				</button>
+				</Button>
 			</div>
 		</div>
 	);
