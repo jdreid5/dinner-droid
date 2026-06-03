@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { ApiError, getPlan } from "@/lib/api";
 import { notFound, redirect } from "next/navigation";
+import { PageContainer, SectionHeading } from "@/app/components/ui";
 import PlanDeleteButton from "./PlanDeleteButton";
 
 function formatDate(iso: string) {
@@ -36,69 +37,62 @@ export default async function PlanDetailPage({
 			if (error.status === 404) notFound();
 			if (error.status === 403) {
 				return (
-					<div className="max-w-3xl mx-auto px-4 py-8">
-						<h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-							Plan unavailable
-						</h1>
-						<p className="text-gray-500">
+					<PageContainer className="max-w-3xl">
+						<h1 className="mb-3 text-3xl text-ink">Plan unavailable</h1>
+						<p className="text-muted">
 							You do not have permission to view this plan.
 						</p>
-					</div>
+					</PageContainer>
 				);
 			}
 		}
 
 		const message = error instanceof Error ? error.message : "Failed to load plan.";
 		return (
-			<div className="max-w-3xl mx-auto px-4 py-8">
-				<h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-					Could not load plan
-				</h1>
-				<p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+			<PageContainer className="max-w-3xl">
+				<h1 className="mb-3 text-3xl text-ink">Could not load plan</h1>
+				<p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/30 dark:text-red-400">
 					{message}
 				</p>
-			</div>
+			</PageContainer>
 		);
 	}
 
 	return (
-		<div className="max-w-3xl mx-auto px-4 py-8">
-			<div className="flex items-center justify-between mb-6">
+		<PageContainer className="max-w-3xl">
+			<div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div>
-					<h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-						{formatDate(plan.startsOn)}
-					</h1>
-					{plan.notes && (
-						<p className="text-gray-500 mt-1">{plan.notes}</p>
-					)}
+					<SectionHeading>Meal plan</SectionHeading>
+					<h1 className="mt-1 text-3xl text-ink">{formatDate(plan.startsOn)}</h1>
+					{plan.notes && <p className="mt-2 text-muted">{plan.notes}</p>}
 				</div>
 				<PlanDeleteButton planId={plan.id} />
 			</div>
 
-			<ul className="flex flex-col gap-2 mb-8">
+			<ul className="mb-8 flex flex-col gap-2">
 				{plan.items.map((item, i) => (
 					<li
 						key={item.recipeId}
-						className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3"
+						className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3"
 					>
-						<span className="text-sm text-gray-400 w-5 text-right">
+						<span className="w-5 text-right text-sm tabular-nums text-muted">
 							{i + 1}.
 						</span>
 						{item.imageUrl && (
 							<img
 								src={item.imageUrl}
 								alt={item.title}
-								className="h-12 w-12 rounded object-cover flex-shrink-0"
+								className="h-12 w-12 flex-shrink-0 rounded object-cover"
 							/>
 						)}
 						<Link
 							href={`/recipes/${item.recipeId}`}
-							className="flex-1 font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+							className="flex-1 font-medium text-ink transition-colors hover:text-accent"
 						>
 							{item.title}
 						</Link>
 						{item.cookMinutes != null && (
-							<span className="text-xs text-gray-400 whitespace-nowrap">
+							<span className="whitespace-nowrap text-xs tabular-nums text-muted">
 								{item.cookMinutes} min
 							</span>
 						)}
@@ -108,10 +102,10 @@ export default async function PlanDetailPage({
 
 			<Link
 				href={`/plan/${plan.id}/shopping-list`}
-				className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-md font-medium transition-colors"
+				className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 			>
 				Generate Shopping List
 			</Link>
-		</div>
+		</PageContainer>
 	);
 }

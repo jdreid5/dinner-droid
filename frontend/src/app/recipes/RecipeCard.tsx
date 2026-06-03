@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Recipe } from "../types/recipe";
+import { Badge, Button } from "@/app/components/ui";
 
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 	const router = useRouter();
@@ -14,18 +15,35 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 	};
 
 	return (
-		<li key={recipe.id} className="grid grid-rows-[16rem_4rem_1.5rem_2rem] items-center">
-			<Link href={`/recipes/${recipe.id}`} className="contents">
-				<img src={recipe.imageUrl || ""} alt={recipe.title} className="h-full aspect-square rounded-lg mx-auto" />
-				<h2 className="text-lg text-gray-700 text-center line-clamp-2">{recipe.title}</h2>
-				<p className="text-sm text-gray-500 text-center">{recipe.cookMinutes} minutes</p>
+		<li className="group flex flex-col">
+			<Link
+				href={`/recipes/${recipe.id}`}
+				className="flex flex-1 flex-col rounded-xl outline-none transition-transform duration-200 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background group-hover:-translate-y-1 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0"
+			>
+				<div className="overflow-hidden rounded-xl border border-border bg-surface">
+					<img
+						src={recipe.imageUrl || ""}
+						alt={recipe.title}
+						className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+					/>
+				</div>
+				<h2 className="mt-3 line-clamp-2 font-serif text-base font-semibold leading-snug text-ink sm:text-lg">
+					{recipe.title}
+				</h2>
+				{recipe.cookMinutes != null && (
+					<div className="mt-2">
+						<Badge>{recipe.cookMinutes} min</Badge>
+					</div>
+				)}
 			</Link>
-			<button
+			<Button
+				variant="ghost"
+				size="sm"
 				onClick={handleAddToPlan}
-				className="text-xs text-blue-500 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors mx-auto"
+				className="mt-2 self-start px-0 text-accent hover:bg-transparent hover:text-accent-hover"
 			>
 				+ Add to Plan
-			</button>
+			</Button>
 		</li>
 	);
 }

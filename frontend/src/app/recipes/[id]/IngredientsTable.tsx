@@ -1,6 +1,7 @@
 "use client";
 import { Ingredient } from "@/app/types/recipe";
 import { usePortions } from "./PortionContext";
+import { Badge, Card, SectionHeading } from "@/app/components/ui";
 
 const BASE_PORTIONS = 2;
 
@@ -26,22 +27,22 @@ export function IngredientsTable({ ingredients }: { ingredients: Ingredient[] })
 	}
 
 	return (
-		<div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-			<h2 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
+		<Card className="p-5">
+			<SectionHeading as="h2" className="mb-3">
 				Ingredients
-			</h2>
-			<ul className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
+			</SectionHeading>
+			<ul className="flex flex-col divide-y divide-border">
 				{nonPantry.map((ingredient) => {
 					const qty = scaleQuantity(ingredient.qty, ingredient.isPantry, portions);
 					return (
 						<li
 							key={ingredient.name}
-							className="flex items-center justify-between py-2"
+							className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0"
 						>
-							<span className="text-sm text-gray-700 dark:text-gray-200">
+							<span className="text-sm text-ink">
 								{ingredient.name}
 							</span>
-							<span className="text-sm text-gray-500 tabular-nums">
+							<span className="font-mono text-sm tabular-nums text-muted">
 								{qty}{ingredient.unit}
 							</span>
 						</li>
@@ -50,22 +51,17 @@ export function IngredientsTable({ ingredients }: { ingredients: Ingredient[] })
 			</ul>
 
 			{isPantry.length > 0 && (
-				<div className="mt-5">
-					<h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-3">
+				<div className="mt-5 border-t border-border pt-5">
+					<SectionHeading as="h3" className="mb-3">
 						Pantry
-					</h3>
+					</SectionHeading>
 					<div className="flex flex-wrap gap-2">
 						{isPantry.map((ingredient) => (
-							<span
-								key={ingredient.name}
-								className="rounded-full bg-gray-100 dark:bg-gray-800 px-2.5 py-0.5 text-xs text-gray-600 dark:text-gray-300"
-							>
-								{ingredient.name}
-							</span>
+							<Badge key={ingredient.name}>{ingredient.name}</Badge>
 						))}
 					</div>
 				</div>
 			)}
-		</div>
+		</Card>
 	)
 }

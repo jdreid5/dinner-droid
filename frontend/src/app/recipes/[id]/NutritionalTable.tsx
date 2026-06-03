@@ -1,5 +1,6 @@
 "use client";
 import { Nutrition } from "@/app/types/recipe";
+import { Card, SectionHeading } from "@/app/components/ui";
 
 type Stat = {
 	label: string;
@@ -18,19 +19,17 @@ export function NutritionalTable({ nutrition }: { nutrition: Nutrition }) {
 	];
 
 	return (
-		<div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
-			<div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+		<Card className="p-5">
+			<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
 				{stats.map((stat) => (
 					<div key={stat.label}>
-						<p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
-							{stat.label}
-						</p>
-						<p className="text-lg font-semibold text-gray-800 dark:text-gray-100 tabular-nums">
+						<SectionHeading className="mb-1">{stat.label}</SectionHeading>
+						<p className="font-mono text-lg font-semibold tabular-nums text-ink">
 							{stat.value ?? "—"}{stat.value != null && stat.unit}
 						</p>
 					</div>
 				))}
 			</div>
-		</div>
+		</Card>
 	)
 }
