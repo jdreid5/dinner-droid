@@ -79,7 +79,8 @@ export default function Navbar() {
 	const btnOutline = `${btnBase} border border-border bg-transparent text-ink hover:bg-surface`;
 
 	return (
-		<header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
+		<>
+			<header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
 			<nav className="mx-auto flex w-full max-w-5xl items-center gap-6 px-4 py-3 sm:px-6">
 				<Link
 					href="/"
@@ -150,6 +151,7 @@ export default function Navbar() {
 					</svg>
 				</button>
 			</nav>
+			</header>
 
 			{/* Mobile / tablet drawer */}
 			{drawerOpen && (
@@ -250,6 +252,6 @@ export default function Navbar() {
 					</div>
 				</div>
 			)}
-		</header>
+		</>
 	);
 }
