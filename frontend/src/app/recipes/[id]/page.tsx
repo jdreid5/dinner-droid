@@ -51,9 +51,9 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 						<SectionHeading as="h2" className="mb-4">
 							Method
 						</SectionHeading>
-						<ol className="flex flex-col gap-4">
+						<ol className="flex flex-col divide-y divide-border">
 							{recipe.steps?.map((step) => (
-								<li key={step.n} className="flex gap-4">
+								<li key={step.n} className="flex gap-4 py-4 first:pt-0 last:pb-0">
 									<span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-accent font-serif text-sm font-semibold text-white">
 										{step.n}
 									</span>
