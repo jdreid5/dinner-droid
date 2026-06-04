@@ -32,9 +32,6 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 							{recipe.cookMinutes != null && (
 								<Badge>{recipe.cookMinutes} minutes</Badge>
 							)}
-							{recipe.servings != null && (
-								<Badge variant="secondary">Serves {recipe.servings}</Badge>
-							)}
 						</div>
 						<Link
 							href={`/plan/new?recipeIds=${recipe.id}`}
