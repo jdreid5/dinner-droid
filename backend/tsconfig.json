@@ -43,5 +43,5 @@
 
 	"esModuleInterop": true,
   },
-  "include": ["server.ts", "auth.ts"]
+  "include": ["server.ts", "auth.ts", "search/**/*.ts"]
 }

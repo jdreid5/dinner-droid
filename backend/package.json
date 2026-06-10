@@ -11,6 +11,7 @@
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "dev": "ts-node server.ts",
+    "search:reindex": "ts-node search/reindexAll.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -21,8 +22,10 @@
     "argon2": "^0.44.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "typesense": "^3.0.6"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

@@ -23,6 +23,7 @@ COPY prisma ./prisma
 RUN DATABASE_URL="file:./prisma/dev.db" npx prisma generate
 
 COPY tsconfig.json server.ts auth.ts ./
+COPY search ./search
 RUN npx tsc
 
 # ---------- Runtime ----------

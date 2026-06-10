@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+FROM typesense/typesense:27.1
+
+COPY typesense-entrypoint.sh /typesense-entrypoint.sh
+RUN chmod +x /typesense-entrypoint.sh
+
+EXPOSE 8108
+CMD ["/typesense-entrypoint.sh"]
