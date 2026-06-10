@@ -8,9 +8,8 @@
 #   fly deploy -c fly.typesense.toml
 #
 # Then on the backend app (dinner-droid), set:
-#   fly secrets set TYPESENSE_HOST=dinner-droid-typesense.internal \
-#     TYPESENSE_PORT=8108 TYPESENSE_PROTOCOL=http \
-#     TYPESENSE_API_KEY=<same-key-as-above> -a dinner-droid
+#   fly secrets set TYPESENSE_API_KEY=<same-key-as-above> -a dinner-droid
+#   (Host/port/protocol are in fly.toml — fly.dev HTTPS, not .internal)
 
 app = "dinner-droid-typesense"
 primary_region = "lhr"

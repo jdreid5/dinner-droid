@@ -9,5 +9,6 @@ fi
 exec /opt/typesense-server \
   --data-dir /data \
   --api-key="$TYPESENSE_API_KEY" \
+  --api-address=:: \
   --listen-port=8108 \
   --enable-cors
