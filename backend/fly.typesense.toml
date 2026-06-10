@@ -1,0 +1,37 @@
+# Fly.io configuration for the Dinner Droid Typesense search index.
+# Deploy from backend/: fly deploy -c fly.typesense.toml
+#
+# First-time setup:
+#   fly apps create dinner-droid-typesense
+#   fly volumes create typesense_data --region lhr --size 1 -a dinner-droid-typesense
+#   fly secrets set TYPESENSE_API_KEY=<strong-random-key> -a dinner-droid-typesense
+#   fly deploy -c fly.typesense.toml
+#
+# Then on the backend app (dinner-droid), set:
+#   fly secrets set TYPESENSE_HOST=dinner-droid-typesense.internal \
+#     TYPESENSE_PORT=8108 TYPESENSE_PROTOCOL=http \
+#     TYPESENSE_API_KEY=<same-key-as-above> -a dinner-droid
+
+app = "dinner-droid-typesense"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile.typesense"
+
+[env]
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port = 8108
+  force_https = false
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+
+[mounts]
+  source = "typesense_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

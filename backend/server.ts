@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -10,6 +11,9 @@ import {
 	clearSessionCookie,
 	createAuthMiddleware,
 } from "./auth";
+import { warnIfSearchIndexEmpty } from "./search/checkIndex";
+import { indexRecipeSafe } from "./search/indexRecipe";
+import { searchRecipes } from "./search/searchRecipes";
 
 const app = express();
 const prisma = new PrismaClient();
@@ -213,6 +217,8 @@ app.post("/api/import", async (req: Request<{}, {}, ImportPayload>, res: Respons
 			});
 		}
 
+		await indexRecipeSafe(prisma, recipe.id);
+
 		return res.json({ ok: true, recipeId: recipe.id, title: recipe.title });
 	} catch (err: any) {
 		console.error(err);
@@ -242,19 +248,8 @@ app.get("/api/recipes", async (req: Request, res: Response) => {
 app.get("/api/searched-recipes", async (req: Request, res: Response) => {
 	try {
 		const searchTerm = String(req.query.searchTerm) || "";
-		const limit = 100;
-
-		const searchedRecipes = await prisma.recipe.findMany({
-			where: {
-				title: {
-					contains: searchTerm
-				}
-			},
-			take: limit,
-			orderBy: { title: "asc" }
-		});
-
-		return res.json(searchedRecipes);
+		const results = await searchRecipes(prisma, searchTerm, { limit: 100 });
+		return res.json(results);
 	} catch (err: any) {
 		console.error(err);
 		return res
@@ -660,6 +655,7 @@ app.get("/api/auth/me", authenticate, async (req: Request, res: Response) => {
 });
 
 const PORT = Number(process.env.PORT ?? 3001);
-app.listen(PORT, "0.0.0.0", () =>
-  	console.log(`Importer API listening on port ${PORT}`)
-);
+app.listen(PORT, "0.0.0.0", () => {
+	console.log(`Importer API listening on port ${PORT}`);
+	void warnIfSearchIndexEmpty(prisma);
+});

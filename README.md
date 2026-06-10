@@ -36,6 +36,7 @@ POST http://localhost:3001/api/import
 ```
 cd backend
 npm install
+cp .env.example .env
 ```
 
 ### 2. Run migrations
@@ -43,16 +44,44 @@ npm install
 npx prisma migrate dev
 ```
 
-### 3. Start the server
+### 3. Start Typesense (search index)
+From the repo root:
+```
+docker compose up -d typesense
+```
+
+### 4. Index recipes into Typesense
+After Typesense is running (first time, or after wiping the Typesense volume):
+```
+cd backend
+npm run search:reindex
+```
+
+### 5. Start the server
 ```
 npx ts-node server.ts
 ```
 
-### 4. Install frontend dependencies (separate terminal)
+### 6. Install frontend dependencies (separate terminal)
 ```
 cd frontend
 npm install
 npm run dev
+```
+
+## Search (Typesense)
+
+Recipe search uses [Typesense](https://typesense.org/) for typo-tolerant matching on titles and ingredients.
+
+| Environment | Typesense host |
+|-------------|----------------|
+| Local | `localhost:8108` via Docker Compose |
+| Production | Separate Fly.io app (`dinner-droid-typesense`) — see `backend/fly.typesense.toml` |
+
+New recipes imported via `POST /api/import` are indexed automatically. To rebuild the full index:
+
+```
+cd backend && npm run search:reindex
 ```
 
 ## Using the Scraper Bookmarklet

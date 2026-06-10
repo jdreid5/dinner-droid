@@ -64,7 +64,7 @@ export async function getRecipe(id: string | number): Promise<Recipe> {
 }
 
 export async function getSearchedRecipes(query: string): Promise<Recipe[]> {
-	const res = await fetch(`${getApiBase()}/api/searched-recipes?searchTerm=${query}`, {
+	const res = await fetch(`${getApiBase()}/api/searched-recipes?searchTerm=${encodeURIComponent(query)}`, {
 		cache: "no-store",
 		headers: { ...(await authHeaders()) },
 	});

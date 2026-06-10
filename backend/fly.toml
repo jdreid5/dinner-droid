@@ -14,6 +14,10 @@ primary_region = "lhr"
   DATABASE_URL = "file:/data/dev.db"
   # Public URL of your deployed frontend (used for CORS + cookies).
   FRONTEND_ORIGIN = "https://your-frontend.example.com"
+  # Typesense (set host/port/protocol/api-key via fly secrets — see fly.typesense.toml)
+  TYPESENSE_HOST = "dinner-droid-typesense.internal"
+  TYPESENSE_PORT = "8108"
+  TYPESENSE_PROTOCOL = "http"
 
 [http_service]
   internal_port = 3001

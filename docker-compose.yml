@@ -1,0 +1,17 @@
+services:
+  typesense:
+    image: typesense/typesense:27.1
+    ports:
+      - "8108:8108"
+    volumes:
+      - typesense-data:/data
+    environment:
+      TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-dev-typesense-key}
+    command: >
+      --data-dir /data
+      --api-key=${TYPESENSE_API_KEY:-dev-typesense-key}
+      --listen-port=8108
+      --enable-cors
+
+volumes:
+  typesense-data:
