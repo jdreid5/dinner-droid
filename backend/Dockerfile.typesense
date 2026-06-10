@@ -5,4 +5,5 @@ COPY typesense-entrypoint.sh /typesense-entrypoint.sh
 RUN chmod +x /typesense-entrypoint.sh
 
 EXPOSE 8108
-CMD ["/typesense-entrypoint.sh"]
+# Override base image ENTRYPOINT (/opt/typesense-server) so our script runs.
+ENTRYPOINT ["/typesense-entrypoint.sh"]
