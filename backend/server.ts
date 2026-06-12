@@ -561,6 +561,154 @@ app.get("/api/plans/:id/shopping-list", authenticate, async (req: Request, res: 
 	}
 });
 
+// ----- Favourites Routes -----
+app.get("/api/favourites", authenticate, async (req: Request, res: Response) => {
+	try {
+		const favourites = await prisma.favourite.findMany({
+			where: { userId: req.auth!.user.id },
+			orderBy: { createdAt: "desc" },
+			include: {
+				recipe: {
+					select: { id: true, title: true, imageUrl: true, cookMinutes: true },
+				},
+			},
+		});
+
+		return res.json(
+			favourites.map((fav) => ({
+				id: fav.recipe.id,
+				title: fav.recipe.title,
+				imageUrl: fav.recipe.imageUrl,
+				cookMinutes: fav.recipe.cookMinutes,
+				favouritedAt: fav.createdAt.toISOString(),
+			})),
+		);
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+app.get("/api/favourites/:recipeId", authenticate, async (req: Request, res: Response) => {
+	try {
+		const recipeId = Number(req.params.recipeId);
+
+		if (isNaN(recipeId)) {
+			return res.status(400).json({ error: "Invalid recipe ID" });
+		}
+
+		const favourite = await prisma.favourite.findUnique({
+			where: {
+				userId_recipeId: {
+					userId: req.auth!.user.id,
+					recipeId,
+				},
+			},
+		});
+
+		return res.json({ favourited: favourite !== null });
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+app.post("/api/favourites", authenticate, async (req: Request, res: Response) => {
+	try {
+		const recipeId = Number(req.body?.recipeId);
+
+		if (isNaN(recipeId)) {
+			return res.status(400).json({ error: "recipeId is required (number)" });
+		}
+
+		const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
+		if (!recipe) {
+			return res.status(404).json({ error: "Recipe not found" });
+		}
+
+		const existing = await prisma.favourite.findUnique({
+			where: {
+				userId_recipeId: {
+					userId: req.auth!.user.id,
+					recipeId,
+				},
+			},
+		});
+
+		if (existing) {
+			return res.status(409).json({ error: "Recipe already favourited" });
+		}
+
+		const favourite = await prisma.favourite.create({
+			data: {
+				userId: req.auth!.user.id,
+				recipeId,
+			},
+			include: {
+				recipe: {
+					select: { id: true, title: true, imageUrl: true, cookMinutes: true },
+				},
+			},
+		});
+
+		return res.status(201).json({
+			id: favourite.recipe.id,
+			title: favourite.recipe.title,
+			imageUrl: favourite.recipe.imageUrl,
+			cookMinutes: favourite.recipe.cookMinutes,
+			favouritedAt: favourite.createdAt.toISOString(),
+		});
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
+app.delete("/api/favourites/:recipeId", authenticate, async (req: Request, res: Response) => {
+	try {
+		const recipeId = Number(req.params.recipeId);
+
+		if (isNaN(recipeId)) {
+			return res.status(400).json({ error: "Invalid recipe ID" });
+		}
+
+		const existing = await prisma.favourite.findUnique({
+			where: {
+				userId_recipeId: {
+					userId: req.auth!.user.id,
+					recipeId,
+				},
+			},
+		});
+
+		if (!existing) {
+			return res.status(404).json({ error: "Favourite not found" });
+		}
+
+		await prisma.favourite.delete({
+			where: {
+				userId_recipeId: {
+					userId: req.auth!.user.id,
+					recipeId,
+				},
+			},
+		});
+
+		return res.json({ ok: true, recipeId });
+	} catch (err: any) {
+		console.error(err);
+		return res
+			.status(500)
+			.json({ ok: false, error: err?.message ?? "Server error" });
+	}
+});
+
 // ----- Auth Routes -----
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

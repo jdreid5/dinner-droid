@@ -1,4 +1,4 @@
-import type { Recipe, Plan, ShoppingListItem, User } from "@/app/types/recipe";
+import type { Recipe, Plan, ShoppingListItem, User, FavouriteRecipe } from "@/app/types/recipe";
 
 export class ApiError extends Error {
 	constructor(
@@ -129,6 +129,57 @@ export async function deletePlan(id: string | number): Promise<{ ok: boolean; id
 	});
 	if (!res.ok) {
 		throw await apiError(res, "Failed to delete plan");
+	}
+	return res.json();
+}
+
+// ----- Favourites -----
+
+export async function getFavourites(): Promise<FavouriteRecipe[]> {
+	const res = await fetch(`${getApiBase()}/api/favourites`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+	});
+	if (!res.ok) {
+		throw await apiError(res, "Failed to fetch favourites");
+	}
+	return res.json();
+}
+
+export async function isFavourited(recipeId: number): Promise<boolean> {
+	const res = await fetch(`${getApiBase()}/api/favourites/${recipeId}`, {
+		cache: "no-store",
+		headers: { ...(await authHeaders()) },
+		credentials: "same-origin",
+	});
+	if (!res.ok) {
+		throw await apiError(res, "Failed to check favourite status");
+	}
+	const data = await res.json();
+	return data.favourited === true;
+}
+
+export async function addFavourite(recipeId: number): Promise<FavouriteRecipe> {
+	const res = await fetch(`${getApiBase()}/api/favourites`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json", ...(await authHeaders()) },
+		body: JSON.stringify({ recipeId }),
+		credentials: "same-origin",
+	});
+	if (!res.ok) {
+		throw await apiError(res, "Failed to add favourite");
+	}
+	return res.json();
+}
+
+export async function removeFavourite(recipeId: number): Promise<{ ok: boolean; recipeId: number }> {
+	const res = await fetch(`${getApiBase()}/api/favourites/${recipeId}`, {
+		method: "DELETE",
+		headers: { ...(await authHeaders()) },
+		credentials: "same-origin",
+	});
+	if (!res.ok) {
+		throw await apiError(res, "Failed to remove favourite");
 	}
 	return res.json();
 }

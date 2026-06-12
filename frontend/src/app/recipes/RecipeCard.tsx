@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Recipe } from "../types/recipe";
+import FavouriteButton from "@/app/components/FavouriteButton";
 import { Badge, Button } from "@/app/components/ui";
 
 export default function RecipeCard({ recipe }: { recipe: Recipe }) {
@@ -36,14 +37,17 @@ export default function RecipeCard({ recipe }: { recipe: Recipe }) {
 					</div>
 				)}
 			</Link>
-			<Button
-				variant="ghost"
-				size="sm"
-				onClick={handleAddToPlan}
-				className="mt-2 self-start px-0 text-accent hover:bg-transparent hover:text-accent-hover"
-			>
-				+ Add to Plan
-			</Button>
+			<div className="mt-2 flex flex-wrap items-center gap-3">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={handleAddToPlan}
+					className="self-start px-0 text-accent hover:bg-transparent hover:text-accent-hover"
+				>
+					+ Add to Plan
+				</Button>
+				<FavouriteButton recipeId={recipe.id} size="sm" />
+			</div>
 		</li>
 	);
 }

@@ -4,6 +4,7 @@ import { IngredientsTable } from "./IngredientsTable";
 import { NutritionalTable } from "./NutritionalTable";
 import { PortionProvider } from "./PortionContext";
 import { PortionSelector } from "./PortionSelector";
+import FavouriteButton from "@/app/components/FavouriteButton";
 import { Badge, PageContainer, SectionHeading } from "@/app/components/ui";
 
 function formatStepBody(body: string) {
@@ -33,12 +34,15 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 								<Badge>{recipe.cookMinutes} minutes</Badge>
 							)}
 						</div>
-						<Link
-							href={`/plan/new?recipeIds=${recipe.id}`}
-							className="mt-6 inline-flex items-center justify-center gap-2 self-start rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-						>
-							+ Add to Plan
-						</Link>
+						<div className="mt-6 flex flex-wrap items-center gap-3">
+							<Link
+								href={`/plan/new?recipeIds=${recipe.id}`}
+								className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+							>
+								+ Add to Plan
+							</Link>
+							<FavouriteButton recipeId={recipe.id} />
+						</div>
 					</div>
 				</div>
 
