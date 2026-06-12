@@ -67,3 +67,11 @@ export type User = {
 	email: string;
 	name: string | null;
 };
+
+export type FavouriteRecipe = {
+	id: number;
+	title: string;
+	imageUrl: string | null;
+	cookMinutes: number | null;
+	favouritedAt: string;
+};

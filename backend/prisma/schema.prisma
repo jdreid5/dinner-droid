@@ -26,6 +26,7 @@ model User {
 
   recipes Recipe[]
   plans   Plan[]
+  favourites Favourite[]
   sessions Session[]
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
@@ -106,6 +107,7 @@ model Recipe {
   orders    OrderHistory[]
   planItems PlanItem[]
   tags      RecipeTag[]
+  favourites Favourite[]
 
   @@index([title])
   @@index([cookMinutes])
@@ -209,4 +211,16 @@ model RecipeTag {
 
   @@id([recipeId, tagId])
   @@index([tagId])
+}
+
+model Favourite {
+  userId    Int
+  recipeId  Int
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, recipeId])
+  @@index([userId])
 }

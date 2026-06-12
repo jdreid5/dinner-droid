@@ -1,0 +1,15 @@
+{
+  "//": "DEV ONLY — do not use for production deploys. Docker Desktop must be running.",
+  "//hosting": "Frontend: Vercel (frontend/). Backend + Typesense: Fly.io (backend/). This root package only orchestrates local dev.",
+  "name": "dinner-droid",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev:typesense && concurrently -n backend,frontend -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:typesense": "docker compose up -d typesense",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

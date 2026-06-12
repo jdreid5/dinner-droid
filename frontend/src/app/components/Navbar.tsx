@@ -8,6 +8,7 @@ import { Button, ThemeToggle, cn } from "@/app/components/ui";
 
 const navLinks = [
 	{ href: "/plan", label: "My Plans" },
+	{ href: "/favourites", label: "Favourites" },
 	{ href: "/recipes", label: "Recipes" },
 ];
 

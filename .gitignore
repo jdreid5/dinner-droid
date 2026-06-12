@@ -19,6 +19,7 @@ bun.lockb
 # Environment files (never commit secrets)
 .env
 .env.*.local
+backend/.env.example
 *.env.local
 .envrc
 
