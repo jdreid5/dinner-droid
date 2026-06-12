@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import { addFavourite, isFavourited, removeFavourite } from "@/lib/api";
+import {
+	addFavourite,
+	getUserFacingErrorMessage,
+	isFavourited,
+	removeFavourite,
+} from "@/lib/api";
 import { Button, cn } from "@/app/components/ui";
 
 function HeartIcon({ filled }: { filled: boolean }) {
@@ -40,7 +45,13 @@ export default function FavouriteButton({
 	const [favourited, setFavourited] = useState(false);
 	const [statusLoading, setStatusLoading] = useState(false);
 	const [toggling, setToggling] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [warning, setWarning] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (!warning) return;
+		const timer = window.setTimeout(() => setWarning(null), 6000);
+		return () => window.clearTimeout(timer);
+	}, [warning]);
 
 	useEffect(() => {
 		if (authLoading || !user) {
@@ -79,7 +90,7 @@ export default function FavouriteButton({
 		}
 
 		setToggling(true);
-		setError(null);
+		setWarning(null);
 
 		try {
 			if (favourited) {
@@ -91,7 +102,12 @@ export default function FavouriteButton({
 			}
 			router.refresh();
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to update favourite");
+			setWarning(
+				getUserFacingErrorMessage(
+					err,
+					"Couldn't update your favourites. Please try again.",
+				),
+			);
 		} finally {
 			setToggling(false);
 		}
@@ -118,8 +134,13 @@ export default function FavouriteButton({
 				<HeartIcon filled={favourited} />
 				{size === "md" ? label : (favourited ? "Favourited" : "Favourite")}
 			</Button>
-			{error && (
-				<p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+			{warning && (
+				<p
+					role="alert"
+					className="mt-2 max-w-xs rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200"
+				>
+					{warning}
+				</p>
 			)}
 		</div>
 	);

@@ -25,19 +25,70 @@ async function authHeaders(): Promise<HeadersInit> {
 	return session ? { Cookie: `dd_session=${session.value}` } : {};
 }
 
-async function apiError(res: Response, fallback: string): Promise<ApiError> {
-	const body = await res.text();
-	let detail = body;
+function extractErrorDetail(body: string): string | null {
+	const trimmed = body.trim();
+	if (!trimmed) return null;
+
 	try {
-		const json = JSON.parse(body);
-		detail = typeof json.error === "string" ? json.error : body;
+		const json = JSON.parse(trimmed) as { error?: unknown; message?: unknown };
+		if (typeof json.error === "string") return json.error;
+		if (typeof json.message === "string") return json.message;
 	} catch {
-		// Keep the response text when the backend does not send JSON.
+		// Not JSON — fall through to HTML/plain-text handling.
 	}
 
-	const message = detail
-		? `${fallback} (${res.status} ${res.statusText}): ${detail}`
-		: `${fallback} (${res.status} ${res.statusText})`;
+	if (/^<!DOCTYPE html|^<html/i.test(trimmed)) {
+		const preMatch = trimmed.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+		return preMatch?.[1]?.trim() ?? null;
+	}
+
+	if (trimmed.length <= 200 && !/[<>]/.test(trimmed)) {
+		return trimmed;
+	}
+
+	return null;
+}
+
+function friendlyMessageForStatus(
+	status: number,
+	fallback: string,
+	detail: string | null,
+): string {
+	switch (status) {
+		case 401:
+			return "Please log in to continue.";
+		case 403:
+			return "You don't have permission to do that.";
+		case 404:
+			return "This feature isn't available right now. Please try again later.";
+		case 409:
+			return detail ?? "That item is already saved.";
+		case 500:
+		case 502:
+		case 503:
+			return "Something went wrong on our end. Please try again later.";
+		default:
+			return detail ?? fallback;
+	}
+}
+
+export function getUserFacingErrorMessage(
+	error: unknown,
+	fallback: string,
+): string {
+	if (error instanceof ApiError) {
+		return error.message;
+	}
+	if (error instanceof Error && error.message && !/[<>]/.test(error.message)) {
+		return error.message;
+	}
+	return fallback;
+}
+
+async function apiError(res: Response, fallback: string): Promise<ApiError> {
+	const body = await res.text();
+	const detail = extractErrorDetail(body);
+	const message = friendlyMessageForStatus(res.status, fallback, detail);
 	return new ApiError(message, res.status, res.statusText, body);
 }
 
