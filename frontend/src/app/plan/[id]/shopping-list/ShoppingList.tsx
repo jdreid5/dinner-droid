@@ -6,6 +6,8 @@ import { getShoppingList } from "@/lib/api";
 import { Button, Input, SectionHeading } from "@/app/components/ui";
 
 const CSV_HEADERS = ["Name", "Quantity", "Unit"];
+const MIN_PORTIONS = 1;
+const MAX_PORTIONS = 10;
 
 const itemKey = (item: ShoppingListItem) =>
 	`${item.name}|${item.unit ?? ""}`;
@@ -87,6 +89,14 @@ export default function ShoppingList({ planId }: { planId: number }) {
 	const pantryItems = items.filter((i) => i.isPantry);
 	const canExportCsv = !loading && !error && items.length > 0;
 
+	const updatePortions = (nextPortions: number) => {
+		if (!Number.isInteger(nextPortions)) return;
+		setPortions(Math.min(MAX_PORTIONS, Math.max(MIN_PORTIONS, nextPortions)));
+	};
+
+	const decrementPortions = () => updatePortions(portions - 1);
+	const incrementPortions = () => updatePortions(portions + 1);
+
 	const formatQty = (item: ShoppingListItem) => {
 		const unit = item.unit ? ` ${item.unit}` : "";
 		if (item.isPantry) {
@@ -155,18 +165,39 @@ export default function ShoppingList({ planId }: { planId: number }) {
 						<label htmlFor="portions" className="text-sm font-medium text-ink">
 							Portions
 						</label>
-						<Input
-							id="portions"
-							type="number"
-							min={1}
-							max={10}
-							value={portions}
-							onChange={(e) => {
-								const val = Number(e.target.value);
-								if (val >= 1 && val <= 10) setPortions(val);
-							}}
-							className="w-14 px-2 text-center tabular-nums"
-						/>
+						<div className="inline-flex overflow-hidden rounded-md border border-border bg-surface">
+							<button
+								type="button"
+								onClick={decrementPortions}
+								disabled={portions <= MIN_PORTIONS}
+								aria-label="Decrease portions"
+								className="flex h-11 w-11 items-center justify-center text-lg font-medium text-ink transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
+							>
+								-
+							</button>
+							<Input
+								id="portions"
+								type="text"
+								inputMode="numeric"
+								pattern="[0-9]*"
+								value={portions}
+								aria-label="Portion count"
+								onChange={(e) => {
+									const val = Number(e.target.value.trim());
+									updatePortions(val);
+								}}
+								className="h-11 w-14 rounded-none border-y-0 border-x border-border px-2 text-center tabular-nums focus-visible:ring-inset"
+							/>
+							<button
+								type="button"
+								onClick={incrementPortions}
+								disabled={portions >= MAX_PORTIONS}
+								aria-label="Increase portions"
+								className="flex h-11 w-11 items-center justify-center text-lg font-medium text-ink transition-colors hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-40"
+							>
+								+
+							</button>
+						</div>
 					</div>
 					<Button
 						variant="outline"
