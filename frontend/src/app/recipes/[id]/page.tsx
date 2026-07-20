@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { getRecipe } from "@/lib/api";
 import { IngredientsTable } from "./IngredientsTable";
 import { NutritionalTable } from "./NutritionalTable";
 import { PortionProvider } from "./PortionContext";
 import { PortionSelector } from "./PortionSelector";
+import AddToPlanButton from "@/app/components/AddToPlanButton";
 import FavouriteButton from "@/app/components/FavouriteButton";
 import { Badge, PageContainer, SectionHeading } from "@/app/components/ui";
 
@@ -35,12 +35,15 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
 							)}
 						</div>
 						<div className="mt-6 flex flex-wrap items-center gap-3">
-							<Link
-								href={`/plan/new?recipeIds=${recipe.id}`}
-								className="inline-flex items-center justify-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-							>
-								+ Add to Plan
-							</Link>
+							<AddToPlanButton
+								recipe={{
+									id: recipe.id,
+									title: recipe.title,
+									imageUrl: recipe.imageUrl ?? null,
+									cookMinutes: recipe.cookMinutes ?? null,
+								}}
+								variant="detail"
+							/>
 							<FavouriteButton recipeId={recipe.id} />
 						</div>
 					</div>
