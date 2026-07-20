@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/app/context/AuthContext";
+import { usePlanDraft } from "@/app/context/PlanDraftContext";
 import { Button, ThemeToggle, cn } from "@/app/components/ui";
 
 const navLinks = [
@@ -14,6 +15,7 @@ const navLinks = [
 
 export default function Navbar() {
 	const { user, loading, logout } = useAuth();
+	const { count: draftCount } = usePlanDraft();
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -79,6 +81,8 @@ export default function Navbar() {
 	const btnPrimary = `${btnBase} bg-accent text-white hover:bg-accent-hover`;
 	const btnOutline = `${btnBase} border border-border bg-transparent text-ink hover:bg-surface`;
 
+	const showContinuePlan = draftCount > 0 && pathname !== "/plan/new";
+
 	return (
 		<>
 			<header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
@@ -95,8 +99,22 @@ export default function Navbar() {
 					{navLinks.map((link) => (
 						<Link key={link.href} href={link.href} className={linkClasses}>
 							{link.label}
+							{link.href === "/plan" && draftCount > 0 && (
+								<span className="ml-1.5 tabular-nums text-accent">
+									({draftCount})
+								</span>
+							)}
 						</Link>
 					))}
+
+					{showContinuePlan && (
+						<Link
+							href="/plan/new"
+							className={cn(btnOutline, "px-3 py-1.5 text-sm")}
+						>
+							Continue plan
+						</Link>
+					)}
 
 					{!loading &&
 						(user ? (
@@ -208,8 +226,21 @@ export default function Navbar() {
 									className="rounded-md px-2 py-2 text-base font-medium text-ink transition-colors hover:bg-background"
 								>
 									{link.label}
+									{link.href === "/plan" && draftCount > 0 && (
+										<span className="ml-1.5 tabular-nums text-accent">
+											({draftCount})
+										</span>
+									)}
 								</Link>
 							))}
+							{showContinuePlan && (
+								<Link
+									href="/plan/new"
+									className="rounded-md px-2 py-2 text-base font-medium text-accent transition-colors hover:bg-background"
+								>
+									Continue plan ({draftCount})
+								</Link>
+							)}
 						</div>
 
 						{!loading && (
