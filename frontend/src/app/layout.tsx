@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/app/context/AuthContext";
@@ -6,6 +6,7 @@ import { PlanDraftProvider } from "@/app/context/PlanDraftContext";
 import { ThemeProvider } from "@/app/context/ThemeContext";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import InstallPrompt from "@/app/components/InstallPrompt";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -25,6 +26,22 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
 	title: "Dinner Droid",
 	description: "Plan meals, browse recipes, generate shopping lists",
+	applicationName: "Dinner Droid",
+	appleWebApp: {
+		capable: true,
+		title: "Dinner Droid",
+		statusBarStyle: "default",
+	},
+	formatDetection: {
+		telephone: false,
+	},
+};
+
+export const viewport: Viewport = {
+	themeColor: [
+		{ media: "(prefers-color-scheme: light)", color: "#faf7f2" },
+		{ media: "(prefers-color-scheme: dark)", color: "#14110d" },
+	],
 };
 
 // Runs before paint to avoid a flash of the wrong theme. Mirrors the logic in
