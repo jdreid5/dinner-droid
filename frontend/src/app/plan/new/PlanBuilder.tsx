@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { Recipe } from "@/app/types/recipe";
+import {
+	usePlanDraft,
+	type PlanDraftRecipe,
+} from "@/app/context/PlanDraftContext";
 import { createPlan } from "@/lib/api";
 import { Badge, Button, Input, SectionHeading, Textarea } from "@/app/components/ui";
-
-type SelectedRecipe = Pick<Recipe, "id" | "title" | "imageUrl" | "cookMinutes">;
 
 async function searchRecipes(query: string): Promise<Recipe[]> {
 	const endpoint = query
@@ -20,17 +22,31 @@ async function searchRecipes(query: string): Promise<Recipe[]> {
 export default function PlanBuilder({
 	initialRecipes = [],
 }: {
-	initialRecipes?: SelectedRecipe[];
+	initialRecipes?: PlanDraftRecipe[];
 }) {
 	const router = useRouter();
+	const {
+		recipes: selected,
+		notes,
+		addRecipe,
+		removeRecipe,
+		setNotes,
+		mergeRecipes,
+		clearDraft,
+	} = usePlanDraft();
 
 	const [searchTerm, setSearchTerm] = useState("");
 	const [results, setResults] = useState<Recipe[]>([]);
-	const [selected, setSelected] = useState<SelectedRecipe[]>(initialRecipes);
-	const [notes, setNotes] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const mergedInitialRef = useRef(false);
+	useEffect(() => {
+		if (mergedInitialRef.current || initialRecipes.length === 0) return;
+		mergedInitialRef.current = true;
+		mergeRecipes(initialRecipes);
+	}, [initialRecipes, mergeRecipes]);
 
 	const fetchRecipes = useCallback(async (query: string) => {
 		setLoading(true);
@@ -49,21 +65,13 @@ export default function PlanBuilder({
 		return () => clearTimeout(timeout);
 	}, [searchTerm, fetchRecipes]);
 
-	const addRecipe = (recipe: Recipe) => {
-		if (selected.some((s) => s.id === recipe.id)) return;
-		setSelected((prev) => [
-			...prev,
-			{
-				id: recipe.id,
-				title: recipe.title,
-				imageUrl: recipe.imageUrl ?? null,
-				cookMinutes: recipe.cookMinutes ?? null,
-			},
-		]);
-	};
-
-	const removeRecipe = (id: number) => {
-		setSelected((prev) => prev.filter((s) => s.id !== id));
+	const handleAddRecipe = (recipe: Recipe) => {
+		addRecipe({
+			id: recipe.id,
+			title: recipe.title,
+			imageUrl: recipe.imageUrl ?? null,
+			cookMinutes: recipe.cookMinutes ?? null,
+		});
 	};
 
 	const handleCreate = async () => {
@@ -75,6 +83,7 @@ export default function PlanBuilder({
 				selected.map((s) => s.id),
 				notes || undefined,
 			);
+			clearDraft();
 			router.push(`/plan/${plan.id}`);
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "Something went wrong";
@@ -83,6 +92,8 @@ export default function PlanBuilder({
 			setSubmitting(false);
 		}
 	};
+
+	const hasDraft = selected.length > 0 || notes.trim().length > 0;
 
 	return (
 		<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem]">
@@ -111,7 +122,7 @@ export default function PlanBuilder({
 								<button
 									key={recipe.id}
 									type="button"
-									onClick={() => addRecipe(recipe)}
+									onClick={() => handleAddRecipe(recipe)}
 									disabled={isSelected}
 									className={`flex items-center gap-3 rounded-md px-3 py-2 text-left transition-colors ${
 										isSelected
@@ -147,9 +158,20 @@ export default function PlanBuilder({
 
 			{/* Draft panel */}
 			<div className="border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
-				<SectionHeading as="h2" className="mb-3">
-					Your Plan ({selected.length})
-				</SectionHeading>
+				<div className="mb-3 flex items-center justify-between gap-2">
+					<SectionHeading as="h2" className="mb-0">
+						Your Plan ({selected.length})
+					</SectionHeading>
+					{hasDraft && (
+						<button
+							type="button"
+							onClick={clearDraft}
+							className="text-xs font-medium text-muted transition-colors hover:text-red-600 dark:hover:text-red-400"
+						>
+							Clear draft
+						</button>
+					)}
+				</div>
 
 				{selected.length === 0 ? (
 					<p className="py-4 text-sm text-muted">

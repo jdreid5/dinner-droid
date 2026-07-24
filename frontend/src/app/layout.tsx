@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/app/context/AuthContext";
+import { PlanDraftProvider } from "@/app/context/PlanDraftContext";
 import { ThemeProvider } from "@/app/context/ThemeContext";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
@@ -63,12 +64,13 @@ export default function RootLayout({
 			>
 				<ThemeProvider>
 					<AuthProvider>
-						<div className="flex min-h-screen flex-col">
-							<Navbar />
-							{children}
-							<InstallPrompt />
-							<Footer />
-						</div>
+						<PlanDraftProvider>
+							<div className="flex min-h-screen flex-col">
+								<Navbar />
+								{children}
+								<Footer />
+							</div>
+						</PlanDraftProvider>
 					</AuthProvider>
 				</ThemeProvider>
 			</body>
